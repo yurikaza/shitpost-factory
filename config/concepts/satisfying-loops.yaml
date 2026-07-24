@@ -1,0 +1,30 @@
+# concept #2 - oddly satisfying loops
+
+id: satisfying-loops
+enabled: false                   # enable after the first two are stable
+description: Seamless satisfying stock clips, subtle sfx, minimal text.
+originality_risk: medium
+automatability: high
+
+sourcing:
+  mode: stock
+  providers: [pexels, pixabay]
+  clips_per_video: 3
+  queries: [kinetic sand, soap cutting, hydraulic press, paint mixing, slime]
+
+script:
+  target_words: 0                # no narration
+  hook_max_words: 6              # on-screen text only
+
+audio:
+  narration: false
+  music_mood: calm-loop
+  sfx: [asmr-crunch]
+
+video:
+  max_duration_s: 30
+  loop_seamless: true
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

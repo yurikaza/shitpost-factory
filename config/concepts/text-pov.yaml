@@ -1,0 +1,38 @@
+# concept #4 from docs/research-2026.md - greentext / text-pov cards
+# adding an account = adding a file like this. no python required.
+
+id: text-pov
+enabled: true
+description: Animated text story cards on a gradient background. No footage needed.
+originality_risk: low-medium
+automatability: very-high
+
+account:
+  handle_youtube: ""
+  handle_tiktok: ""
+  handle_instagram: ""
+
+sourcing:
+  mode: generated                # generated | stock | reddit-text
+  background: gradient           # rendered, not sourced
+
+script:
+  target_words: 90
+  hook_max_words: 8
+  tone: absurd, deadpan, short sentences
+  banned_words: []
+
+audio:
+  narration: false               # text-only format, music bed only
+  music_mood: tense-loop
+  sfx: [whoosh, pop]
+
+video:
+  max_duration_s: 35
+
+caption:
+  style: line
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

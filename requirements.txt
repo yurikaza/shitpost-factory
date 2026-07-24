@@ -1,0 +1,29 @@
+# --- core ---
+python-dotenv>=1.0
+pydantic>=2.7
+pyyaml>=6.0
+httpx>=0.27
+tenacity>=8.3
+typer>=0.12
+rich>=13.7
+
+# --- media ---
+# ffmpeg is called via subprocess and must exist on PATH - not a pip dep
+ffmpeg-python>=0.2
+moviepy>=2.1            # v2 API only; see CLAUDE.md for the v1->v2 breakages
+faster-whisper>=1.0
+pillow>=10.3
+
+# --- tts ---
+edge-tts>=6.1
+
+# --- sourcing ---
+praw>=7.7               # reddit, text only
+
+# --- publishing (direct api fallbacks) ---
+google-api-python-client>=2.130
+google-auth-oauthlib>=1.2
+
+# --- dev ---
+pytest>=8.2
+ruff>=0.5

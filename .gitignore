@@ -1,0 +1,49 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+tokens/
+credentials*.json
+client_secret*.json
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# runtime artefacts
+work/*
+!work/.gitkeep
+output/*
+!output/.gitkeep
+logs/*
+!logs/.gitkeep
+state.db
+*.sqlite3
+
+# heavy assets - keep the folders, not the files
+assets/backgrounds/*
+!assets/backgrounds/.gitkeep
+assets/sfx/*
+!assets/sfx/.gitkeep
+assets/music/*
+!assets/music/.gitkeep
+assets/fonts/*
+!assets/fonts/.gitkeep
+
+# local config
+config/settings.yaml
+
+# os
+.DS_Store
+
+# local tool artifacts
+.codegraph/
+.mimo/
+.mimocode/
+.mimo-code.json

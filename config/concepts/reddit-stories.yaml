@@ -1,0 +1,36 @@
+# concept #1 - reddit stories over gameplay
+# HIGHEST originality risk. see docs/research-2026.md 2.2 and 4.2 before enabling.
+# text only, never reddit video. narration and captions must be our own.
+
+id: reddit-stories
+enabled: false
+description: Reddit story, TTS narration, free-to-use gameplay background, word captions.
+originality_risk: HIGH
+automatability: very-high
+
+sourcing:
+  mode: reddit-text
+  subreddits: [tifu, AmItheAsshole, MaliciousCompliance]
+  min_upvotes: 2000
+  max_body_chars: 1200
+  background: local              # assets/backgrounds - free-to-use or self-recorded gameplay
+
+script:
+  rewrite: true                  # REQUIRED - do not narrate verbatim, this is the transformation step
+  target_words: 150
+  hook_max_words: 10
+
+audio:
+  narration: true
+  music_mood: none
+  sfx: []
+
+video:
+  max_duration_s: 60
+
+caption:
+  style: word_by_word
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

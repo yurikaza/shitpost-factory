@@ -1,0 +1,40 @@
+# concept #5 - "did you know" facts over stock b-roll
+
+id: fact-bombs
+enabled: true
+description: Rapid-fire facts, TTS narration, stock b-roll, burned captions.
+originality_risk: low-medium
+automatability: high
+
+account:
+  handle_youtube: ""
+  handle_tiktok: ""
+  handle_instagram: ""
+
+sourcing:
+  mode: stock
+  providers: [pexels, pixabay]
+  clips_per_video: 5
+  query_strategy: from_script    # llm emits a search term per fact
+
+script:
+  facts_per_video: 5
+  target_words: 110
+  hook_max_words: 8
+  tone: fast, confident, no filler
+
+audio:
+  narration: true
+  music_mood: upbeat-bed
+  music_gain_db: -18
+  sfx: [swoosh]
+
+video:
+  max_duration_s: 45
+
+caption:
+  style: word_by_word
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

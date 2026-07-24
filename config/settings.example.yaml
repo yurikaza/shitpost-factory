@@ -1,0 +1,57 @@
+# copy to config/settings.yaml (gitignored). global defaults; concepts override.
+
+runtime:
+  timezone: UTC
+  videos_per_run: 1
+  schedule_hours: [0, 8, 16]     # cron fires 3x/day
+  dry_run: true
+  work_dir: ./work
+  output_dir: ./output
+
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  min_duration_s: 15
+  max_duration_s: 60
+  video_codec: libx264
+  crf: 23
+  preset: veryfast               # cpu-only target, see docs section 5.3
+  audio_codec: aac
+  audio_bitrate: 192k
+  loudness_lufs: -14
+
+captions:
+  engine: faster-whisper
+  model: base                    # base|small on cpu. larger = too slow
+  device: cpu
+  compute_type: int8
+  font_file: ./assets/fonts/REPLACE_ME.ttf   # must be a real file, moviepy/ass wont resolve system fonts
+  font_size: 96
+  primary_colour: "&H00FFFFFF"
+  outline_colour: "&H00000000"
+  outline: 8
+  margin_v: 150                  # clears platform ui chrome
+  style: word_by_word            # word_by_word | line
+
+llm:
+  provider: gemini
+  temperature: 0.9
+  max_output_tokens: 800
+
+sourcing:
+  providers: [pexels, pixabay]
+  min_clip_duration_s: 4
+  prefer_vertical: true
+  dedupe_window_days: 90         # never reuse a clip id within this window
+
+publishing:
+  layer: postiz                  # postiz | direct
+  platforms: [youtube, tiktok, instagram]
+  tiktok_mode: draft             # draft until the content posting audit passes
+  stagger_minutes: 20            # dont post to all platforms at the same second
+
+limits:
+  instagram_posts_per_24h: 25
+  youtube_uploads_per_24h: 100
+  tiktok_requests_per_min: 6
