@@ -31,12 +31,19 @@ def _setup_logging(level: str = "INFO") -> None:
 @app.command()
 def run(
     concept: str = typer.Option(..., "--concept", "-c", help="Concept ID to produce"),
+    brand: str = typer.Option(None, "--brand", "-b", help="Brand name (uses brands/<brand>/ config)"),
     publish: bool = typer.Option(False, "--publish", "-p", help="Actually publish to platforms"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
+    cleanup: bool = typer.Option(False, "--cleanup", help="Delete output after rendering"),
 ) -> None:
     """Produce one video for a single concept."""
     _setup_logging(log_level)
     from factory.pipeline import produce
+
+    # Set brand context
+    if brand:
+        os.environ["FACTORY_BRAND"] = brand
+        console.print(f"[bold]Brand: {brand}[/bold]")
 
     console.print(f"[bold]Producing concept: {concept}[/bold]")
     result = produce(concept, publish=publish, dry_run=None)
@@ -49,7 +56,13 @@ def run(
     if video:
         console.print(f"[green]Rendered:[/green] {video.path}")
         console.print(f"  Duration: {video.duration_s:.1f}s")
-        console.print(f"  Size: {video.path.stat().st_size / 1024 / 1024:.1f} MB")
+        size_mb = video.path.stat().st_size / 1024 / 1024
+        console.print(f"  Size: {size_mb:.1f} MB")
+
+        # Cleanup: delete output file after rendering (for CI)
+        if cleanup:
+            video.path.unlink(missing_ok=True)
+            console.print("[dim]Cleaned up output file[/dim]")
 
     if result["publish_results"]:
         console.print("[bold]Publish results:[/bold]")

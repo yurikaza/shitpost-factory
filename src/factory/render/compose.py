@@ -28,7 +28,15 @@ log = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _WORK_DIR = _PROJECT_ROOT / "work"
-_OUTPUT_DIR = _PROJECT_ROOT / "output"
+def _get_output_dir() -> Path:
+    """Return output directory (brand-specific or default)."""
+    import os
+    brand = os.environ.get("FACTORY_BRAND")
+    if brand:
+        brand_output = _PROJECT_ROOT / "brands" / brand / "output"
+        brand_output.mkdir(parents=True, exist_ok=True)
+        return brand_output
+    return _PROJECT_ROOT / "output"
 
 
 def _reframe_vertical(input_path: Path, output_path: Path, width: int = 1080, height: int = 1920) -> Path:
@@ -311,9 +319,10 @@ def compose_video(
         working_video = with_captions
 
     # Step 7: Move to output
-    _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = _get_output_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    output_path = _OUTPUT_DIR / f"{concept.id}_{timestamp}.mp4"
+    output_path = output_dir / f"{concept.id}_{timestamp}.mp4"
     working_video.rename(output_path)
 
     log.info("Final video: %s", output_path)

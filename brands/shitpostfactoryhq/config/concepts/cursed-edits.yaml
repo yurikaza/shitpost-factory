@@ -1,0 +1,64 @@
+# concept: cursed-edits — weird/bizarre clips + unhinged text
+# The "what did I just watch" energy
+
+id: cursed-edits
+enabled: true
+description: >
+  Bizarre, confusing, mildly cursed clips from Reddit with deeply unhinged
+  commentary. The kind of content that makes you question reality.
+  Confusing perspectives, crappy designs, things that are just wrong.
+originality_risk: low
+automatability: high
+
+account:
+  handle_youtube: ""
+  handle_tiktok: ""
+  handle_instagram: ""
+
+sourcing:
+  mode: reddit-video
+  clips_per_video: 4
+  min_upvotes: 5000
+  max_duration_s: 12
+  min_duration_s: 2
+  subreddits:
+    - confusing_perspective
+    - CrappyDesign
+    - mildlyinfuriating
+    - softwaregore
+    - oddlysatisfying
+    - TIHI
+    - thanksihateit
+    - cursedfoods
+    - WhyWereTheyFilming
+    - notmyjob
+
+script:
+  target_words: 20
+  hook_max_words: 5
+  style: text_overlay
+  tone: >
+    You are deeply disturbed by what you're seeing. Write like someone who
+    has been staring at cursed images for too long. Short. Broken sentences.
+    Sound like you're having a crisis. The text should make the viewer feel
+    uncomfortable in a funny way. Think "this is fine" energy but worse.
+    NEVER be normal. NEVER explain what's happening.
+    Format: one hook (top), one punchline (bottom). Max 6 words each.
+  banned_words: [wait for it, omg, literally me, POV, cursed]
+
+audio:
+  narration: false
+  music_mood: tense-loop
+  music_gain_db: -15
+
+video:
+  max_duration_s: 12
+  text_style: impact_bold
+  text_position: top_and_bottom
+
+caption:
+  style: none
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

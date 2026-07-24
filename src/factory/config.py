@@ -109,10 +109,46 @@ def load_env(project_root: Path | None = None) -> None:
     load_dotenv(root / ".env")
 
 
+def _get_brand_root() -> Path | None:
+    """Return brand root path if FACTORY_BRAND env var is set."""
+    brand = os.environ.get("FACTORY_BRAND")
+    if brand:
+        brand_root = _PROJECT_ROOT / "brands" / brand
+        if brand_root.exists():
+            return brand_root
+    return None
+
+
+def _get_concepts_dir() -> Path:
+    """Return concepts directory (brand-specific or default)."""
+    brand_root = _get_brand_root()
+    if brand_root:
+        brand_concepts = brand_root / "config" / "concepts"
+        if brand_concepts.exists():
+            return brand_concepts
+    return _PROJECT_ROOT / "config" / "concepts"
+
+
+def _get_output_dir() -> Path:
+    """Return output directory (brand-specific or default)."""
+    brand_root = _get_brand_root()
+    if brand_root:
+        output_dir = brand_root / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return output_dir
+    return _PROJECT_ROOT / "output"
+
+
 def load_settings(path: Path | None = None) -> dict:
     """Load config/settings.yaml, merged over hardcoded defaults."""
     settings_path = path or (_PROJECT_ROOT / "config" / "settings.yaml")
     file_settings = _load_yaml(settings_path)
+
+    # Override output_dir if brand is set
+    brand_root = _get_brand_root()
+    if brand_root:
+        file_settings.setdefault("output_dir", str(brand_root / "output"))
+
     merged = _deep_merge(dict(_DEFAULT_SETTINGS), file_settings)
     return merged
 
@@ -122,7 +158,8 @@ def load_concept(concept_id: str, settings: dict | None = None) -> Concept:
 
     Merge order: hardcoded defaults -> settings.yaml overrides -> concept overrides.
     """
-    concept_path = _PROJECT_ROOT / "config" / "concepts" / f"{concept_id}.yaml"
+    concepts_dir = _get_concepts_dir()
+    concept_path = concepts_dir / f"{concept_id}.yaml"
     if not concept_path.exists():
         raise FileNotFoundError(f"Concept not found: {concept_path}")
 
@@ -189,7 +226,7 @@ def load_concept(concept_id: str, settings: dict | None = None) -> Concept:
 
 def list_enabled_concepts() -> list[str]:
     """Return IDs of all enabled concepts."""
-    concepts_dir = _PROJECT_ROOT / "config" / "concepts"
+    concepts_dir = _get_concepts_dir()
     enabled = []
     for path in sorted(concepts_dir.glob("*.yaml")):
         raw = _load_yaml(path)
