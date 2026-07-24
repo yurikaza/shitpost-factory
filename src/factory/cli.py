@@ -32,7 +32,6 @@ def _setup_logging(level: str = "INFO") -> None:
 def run(
     concept: str = typer.Option(..., "--concept", "-c", help="Concept ID to produce"),
     publish: bool = typer.Option(False, "--publish", "-p", help="Actually publish to platforms"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-d", help="Override DRY_RUN env var"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
     """Produce one video for a single concept."""
@@ -40,7 +39,7 @@ def run(
     from factory.pipeline import produce
 
     console.print(f"[bold]Producing concept: {concept}[/bold]")
-    result = produce(concept, publish=publish, dry_run=dry_run)
+    result = produce(concept, publish=publish, dry_run=None)
 
     if result["error"]:
         console.print(f"[red]Failed:[/red] {result['error']}")
@@ -62,7 +61,6 @@ def run(
 @app.command("run-all")
 def run_all(
     publish: bool = typer.Option(False, "--publish", "-p", help="Actually publish"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-d", help="Override DRY_RUN"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ) -> None:
     """Produce one video for every enabled concept."""
@@ -70,7 +68,7 @@ def run_all(
     from factory.pipeline import produce_all
 
     console.print("[bold]Producing all enabled concepts...[/bold]")
-    results = produce_all(publish=publish, dry_run=dry_run)
+    results = produce_all(publish=publish, dry_run=None)
 
     # Summary table
     table = Table(title="Results")
