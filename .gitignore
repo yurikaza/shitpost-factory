@@ -50,3 +50,4 @@ config/settings.yaml
 
 # OAuth tokens (sensitive)
 tokens/
+social-media-pipeline/*/output/
