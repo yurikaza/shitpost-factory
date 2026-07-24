@@ -1,13 +1,13 @@
-# concept: meme-bombs — short funny clips + shitpost text + music
-# format: video clip (5-15s) + big bold text overlay + trending-style music
-# no narration, no TTS — text replaces voice, music sets the vibe
+# concept: meme-bombs — viral clips + shitpost text
+# Sources from multiple subreddits across categories
+# No API key needed (pullpush.io + yt-dlp)
 
 id: meme-bombs
 enabled: true
 description: >
-  Short funny clips from Reddit (animals failing, weird moments, cursed situations)
-  with shitpost text overlay and background music. No narration — text IS the content.
-  The video is just the backdrop for the joke.
+  Viral Reddit clips with shitpost text overlay. Sources from fail videos,
+  unexpected moments, satisfying clips, weird situations, karma, and more.
+  The text makes it a shitpost — the clip is just the backdrop.
 originality_risk: low
 automatability: high
 
@@ -23,16 +23,30 @@ sourcing:
   max_duration_s: 15
   min_duration_s: 3
   subreddits:
+    # Animals
     - AnimalsBeingDerps
-    - funny
-    - Unexpected
-    - abruptchaos
-    - therewasanattempt
+    - AnimalsBeingBros
+    # Fails & Wipeouts
     - Whatcouldgowrong
+    - therewasanattempt
+    - nonononoyes
+    # Unexpected & Karma
+    - Unexpected
+    - instant_regret
+    - JusticeServed
+    # Weird & Cursed
+    - mildlyinfuriating
+    - CrappyDesign
+    - confusing_perspective
+    # Impressive
+    - nextfuckinglevel
+    - BeAmazed
+    # Wholesome (with shitpost text = comedy)
     - MadeMeSmile
+    - HumansBeingBros
 
 script:
-  target_words: 30
+  target_words: 25
   hook_max_words: 6
   style: text_overlay
   tone: >

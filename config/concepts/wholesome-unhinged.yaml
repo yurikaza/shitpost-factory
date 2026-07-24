@@ -1,0 +1,61 @@
+# concept: wholesome-unhinged — wholesome clips + chaotic text
+# The "faith in humanity restored but make it unhinged" format
+
+id: wholesome-unhinged
+enabled: true
+description: >
+  Wholesome, heartwarming clips with deeply unhinged text overlay.
+  The contrast between the sweet video and the chaotic commentary
+  is what makes it funny. Dogs being cute, people being bros,
+  but the text sounds like a war documentary.
+originality_risk: low
+automatability: high
+
+account:
+  handle_youtube: ""
+  handle_tiktok: ""
+  handle_instagram: ""
+
+sourcing:
+  mode: reddit-video
+  clips_per_video: 3
+  min_upvotes: 15000
+  max_duration_s: 15
+  min_duration_s: 3
+  subreddits:
+    - AnimalsBeingBros
+    - HumansBeingBros
+    - MadeMeSmile
+    - aww
+    - eyebleach
+    - UpliftingNews
+
+script:
+  target_words: 25
+  hook_max_words: 6
+  style: text_overlay
+  tone: >
+    The video is wholesome. Your text should NOT be. Write like a
+    nature documentary narrator who has seen too much war.
+    Describe the wholesome thing as if it's a military operation
+    or a hostage situation. Deadpan. Serious. The more dramatic
+    you make the cute thing sound, the funnier it is.
+    Format: one hook (top), one punchline (bottom). Max 8 words each.
+  banned_words: [cute, wholesome, aww, adorable, sweet, precious]
+
+audio:
+  narration: false
+  music_mood: hype-loop
+  music_gain_db: -12
+
+video:
+  max_duration_s: 15
+  text_style: impact_bold
+  text_position: top_and_bottom
+
+caption:
+  style: none
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]
