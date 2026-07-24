@@ -68,7 +68,7 @@ class OpenAICompatClient(LLMClient):
         api_key: str,
         model: str,
         temperature: float = 0.9,
-        max_tokens: int = 800,
+        max_tokens: int = 8000,
     ):
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
@@ -86,11 +86,17 @@ class OpenAICompatClient(LLMClient):
         }
         headers = {"Authorization": f"Bearer {self._api_key}"}
         log.info("LLM request: %s model=%s", url, self._model)
-        with httpx.Client(timeout=60) as client:
+        with httpx.Client(timeout=180) as client:
             resp = client.post(url, json=payload, headers=headers)
             resp.raise_for_status()
         data = resp.json()
-        return data["choices"][0]["message"]["content"]
+        msg = data["choices"][0]["message"]
+        content = msg.get("content", "") or ""
+        reasoning = msg.get("reasoning_content", "") or ""
+        if not content and reasoning:
+            log.warning("MiMo returned empty content but has reasoning (%d chars). "
+                        "Reasoning preview: %s", len(reasoning), reasoning[:200])
+        return content
 
     def complete(self, system: str, user: str, **kw) -> str:
         messages = [
@@ -102,8 +108,9 @@ class OpenAICompatClient(LLMClient):
     def complete_json(self, system: str, user: str, schema: dict, **kw) -> dict:
         json_system = (
             f"{system}\n\n"
-            "You MUST respond with valid JSON only. No markdown, no explanation. "
-            f"Follow this schema: {json.dumps(schema)}"
+            "Respond with valid JSON only. No markdown fences, no explanation. "
+            "Be concise — output the JSON directly, do not overthink. "
+            f"Schema: {json.dumps(schema)}"
         )
         messages = [
             {"role": "system", "content": json_system},
@@ -128,7 +135,7 @@ class GeminiClient(LLMClient):
         self._api_key = api_key
         self._model = model
         self._temperature = kw.get("temperature", 0.9)
-        self._max_tokens = kw.get("max_tokens", 800)
+        self._max_tokens = kw.get("max_tokens", 3000)
 
     def _generate(self, contents: list[dict]) -> str:
         url = (
@@ -143,7 +150,7 @@ class GeminiClient(LLMClient):
             },
         }
         log.info("LLM request: gemini model=%s", self._model)
-        with httpx.Client(timeout=60) as client:
+        with httpx.Client(timeout=180) as client:
             resp = client.post(url, json=payload)
             resp.raise_for_status()
         data = resp.json()
@@ -201,7 +208,7 @@ def build_client(provider: str | None = None, dry_run: bool = False) -> LLMClien
             api_key=api_key,
             model=model,
             temperature=float(os.getenv("LLM_TEMPERATURE", "0.9")),
-            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "800")),
+            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "8000")),
         )
 
     if prov == "gemini":
@@ -209,7 +216,7 @@ def build_client(provider: str | None = None, dry_run: bool = False) -> LLMClien
             api_key=os.getenv("GEMINI_API_KEY", ""),
             model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
             temperature=float(os.getenv("LLM_TEMPERATURE", "0.9")),
-            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "800")),
+            max_tokens=int(os.getenv("LLM_MAX_TOKENS", "8000")),
         )
 
     raise ValueError(f"Unknown LLM provider: {prov}")
