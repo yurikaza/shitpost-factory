@@ -176,8 +176,19 @@ def compose_video(
         if len(reframed_clips) == 1:
             concat_path = reframed_clips[0]
         else:
-            concat_path = work / "concat.mp4"
-            concat_media(reframed_clips, concat_path, crf=crf, preset=preset)
+            # Use montage cuts for meme-bombs, regular concat for others
+            if concept.id == "meme-bombs":
+                from factory.render.transitions import concat_with_cuts
+                concat_path = work / "concat.mp4"
+                concat_with_cuts(
+                    reframed_clips, concat_path,
+                    target_duration=max_duration,
+                    crf=crf, preset=preset,
+                    add_effects=True,
+                )
+            else:
+                concat_path = work / "concat.mp4"
+                concat_media(reframed_clips, concat_path, crf=crf, preset=preset)
     else:
         raise ValueError("No clips and not a generated concept — nothing to render")
 
@@ -276,7 +287,7 @@ def compose_video(
             working_video, with_text,
             hook=script.hook,
             punchline=punchline,
-            font_size=72,
+            font_size=48,
             crf=crf,
             preset=preset,
         )
