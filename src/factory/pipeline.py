@@ -25,6 +25,7 @@ from factory.scripting.llm_client import build_client
 from factory.scripting.writer import write_script
 from factory.sourcing.base import FootageProvider
 from factory.sourcing.dedupe import DedupeGuard
+from factory.sourcing.archive_org import ArchiveOrgProvider
 from factory.sourcing.pexels import PexelsProvider
 from factory.sourcing.pixabay import PixabayProvider
 from factory.sourcing.reddit_text import RedditTextProvider
@@ -42,6 +43,7 @@ def _build_provider(name: str, dry_run: bool = False) -> FootageProvider:
     providers = {
         "pexels": lambda: PexelsProvider(dry_run=dry_run),
         "pixabay": lambda: PixabayProvider(dry_run=dry_run),
+        "archive-org": lambda: ArchiveOrgProvider(dry_run=dry_run),
     }
     builder = providers.get(name)
     if builder is None:
