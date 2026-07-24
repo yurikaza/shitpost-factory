@@ -235,29 +235,53 @@ def compose_video(
 
     # Step 5: Normalise audio to -14 LUFS
     normalised = work / "normalised.mp4"
-    # Extract audio, normalise, remux
-    audio_only = work / "audio_raw.wav"
-    from factory.render.ffmpeg_utils import _run
-    _run([
-        "ffmpeg", "-y", "-i", str(working_video),
-        "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
-        str(audio_only),
-    ])
-    normalised_audio = work / "audio_norm.wav"
-    normalise_audio(audio_only, normalised_audio, target_lufs=-14.0)
-    # Remux normalised audio with video
-    _run([
-        "ffmpeg", "-y",
-        "-i", str(working_video),
-        "-i", str(normalised_audio),
-        "-map", "0:v", "-map", "1:a",
-        "-c:v", "copy", "-c:a", "aac",
-        str(normalised),
-    ])
+    from factory.render.ffmpeg_utils import _run, has_audio_stream
+    if not has_audio_stream(working_video):
+        # No audio stream — just copy the video
+        import shutil
+        shutil.copy2(working_video, normalised)
+    else:
+        # Extract audio, normalise, remux
+        audio_only = work / "audio_raw.wav"
+        _run([
+            "ffmpeg", "-y", "-i", str(working_video),
+            "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
+            str(audio_only),
+        ])
+        normalised_audio = work / "audio_norm.wav"
+        normalise_audio(audio_only, normalised_audio, target_lufs=-14.0)
+        _run([
+            "ffmpeg", "-y",
+            "-i", str(working_video),
+            "-i", str(normalised_audio),
+            "-map", "0:v", "-map", "1:a",
+            "-c:v", "copy", "-c:a", "aac",
+            str(normalised),
+        ])
     working_video = normalised
 
-    # Step 6: Generate captions
-    if concept.audio.narration:
+    # Step 6: Text overlay (meme style) or captions (narration style)
+    text_style = getattr(concept.video, 'text_style', '')
+    if text_style == 'impact_bold':
+        # Meme-bombs style: big bold text overlay, no captions
+        from factory.render.text_overlay import overlay_text
+        with_text = work / "with_text.mp4"
+        # Use hook as top text, first sentence of body as punchline
+        body_lines = script.body.split('. ')
+        punchline = body_lines[0] if body_lines else script.body
+        # Truncate punchline to ~8 words
+        punchline_words = punchline.split()[:8]
+        punchline = ' '.join(punchline_words)
+        overlay_text(
+            working_video, with_text,
+            hook=script.hook,
+            punchline=punchline,
+            font_size=72,
+            crf=crf,
+            preset=preset,
+        )
+        working_video = with_text
+    elif concept.audio.narration:
         from factory.render.captions import generate_captions
         ass_path = work / "captions.ass"
         generate_captions(

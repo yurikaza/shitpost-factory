@@ -20,6 +20,16 @@ SYSTEM_PROMPTS: dict[str, str] = {
         "for stock footage — make them match the vibe of each beat, not literal descriptions. "
         "Respond as JSON with keys: hook, body, title, description, hashtags, clip_queries."
     ),
+    "reddit-video": (
+        "You write shitpost text overlays for funny video clips. "
+        "The video is already funny — your job is to make it FUNNIER with text. "
+        "Write a hook (top of screen, max {hook_max_words} words) and a body "
+        "(bottom of screen, {target_words} words max, ONE short sentence). "
+        "The text should feel like the obvious thing everyone's thinking but said in a cursed way. "
+        "NEVER explain the video. NEVER be wholesome. Sound like a degenerate shitposter. "
+        "Also write a title, description, and {hashtags_count} hashtags. "
+        "Respond as JSON with keys: hook, body, title, description, hashtags."
+    ),
     "reddit-text": (
         "You are a short-form video scriptwriter. Rewrite the following Reddit story "
         "into a narration script. DO NOT copy the original text verbatim — that is the "
@@ -41,6 +51,7 @@ SYSTEM_PROMPTS: dict[str, str] = {
 # Template for the user message that wraps source material
 USER_TEMPLATES: dict[str, str] = {
     "stock": "Write a script about: {description}",
+    "reddit-video": "Write shitpost text overlay for a funny video. Theme: {description}",
     "reddit-text": (
         "Here is a Reddit post to rewrite:\n\n"
         "Title: {source_title}\n"

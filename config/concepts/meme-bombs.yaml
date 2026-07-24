@@ -1,0 +1,62 @@
+# concept: meme-bombs — short funny clips + shitpost text + music
+# format: video clip (5-15s) + big bold text overlay + trending-style music
+# no narration, no TTS — text replaces voice, music sets the vibe
+
+id: meme-bombs
+enabled: true
+description: >
+  Short funny clips from Reddit (animals failing, weird moments, cursed situations)
+  with shitpost text overlay and background music. No narration — text IS the content.
+  The video is just the backdrop for the joke.
+originality_risk: low
+automatability: high
+
+account:
+  handle_youtube: ""
+  handle_tiktok: ""
+  handle_instagram: ""
+
+sourcing:
+  mode: reddit-video
+  subreddits:
+    - AnimalsBeingDerps
+    - ChildrenFallingOver
+    - therewasanattempt
+    - Whatcouldgowrong
+    - funny
+    - holdmybeer
+    - abruptchaos
+    - Unexpected
+  min_upvotes: 5000
+  max_duration_s: 15
+  min_duration_s: 3
+
+script:
+  target_words: 30
+  hook_max_words: 6
+  style: text_overlay
+  tone: >
+    Write like a shitpost account. Short, punchy, unhinged.
+    The text should feel like a caption someone would slap on a funny video.
+    Think: obvious observation stated like a threat, or cursed commentary.
+    NEVER explain the joke. NEVER be wholesome. Sound like you've seen too much.
+    Format: one hook line (top of screen), one punchline (bottom of screen).
+    Max 8 words per line. If it's not funny in 2 seconds, it's too long.
+  banned_words: [wait for it, omg, literally me, POV]
+
+audio:
+  narration: false
+  music_mood: hype-loop
+  music_gain_db: -12
+
+video:
+  max_duration_s: 15
+  text_style: impact_bold
+  text_position: top_and_bottom
+
+caption:
+  style: none
+
+publish:
+  hashtags_count: 5
+  platforms: [tiktok, instagram, youtube]

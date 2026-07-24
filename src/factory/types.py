@@ -35,6 +35,8 @@ class SourcingConfig:
     prefer_vertical: bool = True
     dedupe_window_days: int = 90
     min_clip_duration_s: float = 4.0
+    min_duration_s: float = 3.0
+    max_duration_s: float = 15.0
 
 
 @dataclass
@@ -59,6 +61,7 @@ class AudioConfig:
 class VideoConfig:
     max_duration_s: int = 60
     loop_seamless: bool = False
+    text_style: str = ""
 
 
 @dataclass

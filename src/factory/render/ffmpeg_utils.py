@@ -76,6 +76,12 @@ def get_duration(file: Path) -> float:
     return 0.0
 
 
+def has_audio_stream(file: Path) -> bool:
+    """Check if a file has an audio stream."""
+    info = probe(file)
+    return any(s.get("codec_type") == "audio" for s in info.get("streams", []))
+
+
 def get_video_info(file: Path) -> dict:
     """Return width, height, fps, codec for the first video stream."""
     info = probe(file)

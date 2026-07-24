@@ -104,6 +104,51 @@ def _stage_source(
         # No footage needed — concept generates its own visuals (e.g. gradient background)
         return SourcedMaterial(concept_id=concept.id, clips=[], text_source=None)
 
+    if concept.sourcing.mode == "reddit-video":
+        # Fetch short video clips from Reddit subreddits
+        from factory.sourcing.reddit_video import RedditVideoProvider
+        reddit = RedditVideoProvider(dry_run=dry_run)
+        all_clips = []
+        subreddits = concept.sourcing.subreddits or ["funny"]
+        for sub in subreddits:
+            found = reddit.search(
+                subreddit=sub,
+                limit=concept.sourcing.clips_per_video,
+                min_upvotes=concept.sourcing.min_upvotes,
+                max_duration_s=concept.sourcing.max_duration_s,
+                min_duration_s=getattr(concept.sourcing, 'min_duration_s', 3),
+            )
+            new_clips = dedupe.filter_new_clips(found, concept.id)
+            all_clips.extend(new_clips)
+            if len(all_clips) >= concept.sourcing.clips_per_video:
+                break
+
+        if not all_clips:
+            raise RuntimeError(f'No Reddit video clips found for concept={concept.id}')
+
+        # Download clips
+        work_dir = _WORK_DIR / concept.id / "clips"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        downloaded = []
+        for clip in all_clips[:concept.sourcing.clips_per_video]:
+            try:
+                local = reddit.download(clip, work_dir)
+                clip.local_path = local
+                downloaded.append(clip)
+            except Exception as e:
+                log.warning('Download failed for %s: %s', clip.external_id, e)
+
+        if not downloaded:
+            raise RuntimeError(f'All Reddit downloads failed for concept={concept.id}')
+
+        dedupe.mark_clips_used(downloaded, concept.id)
+        return SourcedMaterial(
+            concept_id=concept.id,
+            clips=downloaded,
+            text_source=None,
+            source_ref=None,
+        )
+
     # Stock footage mode: search + download from providers
     clips = []
     queries = concept.sourcing.queries or [concept.description]
