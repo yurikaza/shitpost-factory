@@ -8,7 +8,7 @@ automatability: high
 
 sourcing:
   mode: stock
-  providers: [pexels, pixabay]
+  providers: [pexels]
   clips_per_video: 3
   queries: [kinetic sand, soap cutting, hydraulic press, paint mixing, slime]
 

@@ -13,7 +13,7 @@ account:
 
 sourcing:
   mode: stock
-  providers: [pexels, pixabay]
+  providers: [pexels]
   clips_per_video: 5
   query_strategy: from_script    # llm emits a search term per fact
 

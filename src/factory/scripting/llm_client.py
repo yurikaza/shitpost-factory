@@ -1,8 +1,8 @@
 """Provider-agnostic LLM wrapper. Swapping providers must be a config change only.
 
-Supported: gemini (default, free tier) | mimo | ollama (local, zero cost) | groq.
-MiMo is OpenAI-compatible at https://api.xiaomimimo.com/v1 - only get keys from
-platform.xiaomimimo.com, the lookalike domains are not official.
+Default: MiMo (Xiaomi) via OpenAI-compatible API at https://api.xiaomimimo.com/v1.
+Also supports: gemini, ollama (local), groq.
+Only get MiMo keys from platform.xiaomimimo.com — the lookalike domains are not official.
 See docs/research-2026.md section 7 for the full comparison.
 
 Must support a fixture mode so the pipeline runs offline.
@@ -180,7 +180,7 @@ def build_client(provider: str | None = None, dry_run: bool = False) -> LLMClien
         log.info("Using fixture LLM client (dry run)")
         return FixtureLLMClient()
 
-    prov = provider or os.getenv("LLM_PROVIDER", "gemini")
+    prov = provider or os.getenv("LLM_PROVIDER", "mimo")
     log.info("Building LLM client: provider=%s", prov)
 
     if prov == "fixture":

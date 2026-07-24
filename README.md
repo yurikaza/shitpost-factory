@@ -60,17 +60,16 @@ Reasoning in `docs/research-2026.md` and `docs/decisions/`.
 - faster-whisper for word-level caption timing
 - edge-tts for narration (free, no key)
 - Postiz for publishing (self-hosted)
-- Gemini / MiMo / Ollama for script generation
+- MiMo (Xiaomi) for script generation (free tier)
 
 ## Configuration
 
 | Variable | Purpose |
 |----------|---------|
 | `DRY_RUN` | `true` = render with fixtures, never publish (default) |
-| `LLM_PROVIDER` | `gemini` / `mimo` / `ollama` / `groq` |
-| `TTS_PROVIDER` | `edge` (free) / `piper` / `mimo` |
-| `PEXELS_API_KEY` | 200 req/hr free tier |
-| `PIXABAY_API_KEY` | Free tier |
+| `MIMO_API_KEY` | MiMo LLM for script generation (free) |
+| `PEXELS_API_KEY` | Stock footage (200 req/hr free tier) |
+| `REDDIT_CLIENT_ID/SECRET` | Reddit stories sourcing |
 | `POSTIZ_API_KEY` | Self-hosted Postiz instance |
 
 ## Deployment

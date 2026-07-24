@@ -3,7 +3,7 @@
 # text only, never reddit video. narration and captions must be our own.
 
 id: reddit-stories
-enabled: false
+enabled: true
 description: Reddit story, TTS narration, free-to-use gameplay background, word captions.
 originality_risk: HIGH
 automatability: very-high
