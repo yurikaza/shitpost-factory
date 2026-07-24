@@ -47,3 +47,6 @@ config/settings.yaml
 .mimo/
 .mimocode/
 .mimo-code.json
+
+# OAuth tokens (sensitive)
+tokens/
