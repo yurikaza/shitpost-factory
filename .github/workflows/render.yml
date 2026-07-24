@@ -1,0 +1,65 @@
+# Render a single concept video and clean up
+# Usage: called by concept-specific workflows
+
+name: Render Video
+
+on:
+  workflow_call:
+    inputs:
+      concept:
+        required: true
+        type: string
+        description: Concept ID to render
+      brand:
+        required: true
+        type: string
+        description: Brand name (folder under brands/)
+
+env:
+  FACTORY_BRAND: ${{ inputs.brand }}
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-extra
+
+      - name: Create .env
+        run: |
+          cat > .env << 'EOF'
+          MIMO_API_KEY=${{ secrets.MIMO_API_KEY }}
+          MIMO_BASE_URL=${{ secrets.MIMO_BASE_URL }}
+          MIMO_MODEL=${{ secrets.MIMO_MODEL }}
+          PEXELS_API_KEY=${{ secrets.PEXELS_API_KEY }}
+          DRY_RUN=false
+          EOF
+
+      - name: Render video
+        run: |
+          PYTHONPATH=src python -m factory.cli run \
+            --concept ${{ inputs.concept }} \
+            --brand ${{ inputs.brand }} \
+            --cleanup
+
+      - name: Cleanup work directory
+        if: always()
+        run: |
+          rm -rf work/ state.db

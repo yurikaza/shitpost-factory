@@ -1,0 +1,17 @@
+# Wholesome Unhinged — wholesome clips + chaotic text
+# Runs every 4 hours (offset from others)
+
+name: Wholesome Unhinged
+
+on:
+  schedule:
+    - cron: "15 */4 * * *"  # Every 4 hours, 15min offset
+  workflow_dispatch:
+
+jobs:
+  render:
+    uses: ./.github/workflows/render.yml
+    with:
+      concept: wholesome-unhinged
+      brand: shitpostfactoryhq
+    secrets: inherit

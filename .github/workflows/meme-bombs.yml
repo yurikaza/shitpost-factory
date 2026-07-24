@@ -1,0 +1,17 @@
+# Meme Bombs — viral Reddit clips + shitpost text
+# Runs every 4 hours
+
+name: Meme Bombs
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"  # Every 4 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  render:
+    uses: ./.github/workflows/render.yml
+    with:
+      concept: meme-bombs
+      brand: shitpostfactoryhq
+    secrets: inherit

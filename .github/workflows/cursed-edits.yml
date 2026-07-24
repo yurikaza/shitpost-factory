@@ -1,0 +1,17 @@
+# Cursed Edits — bizarre clips + unhinged text
+# Runs every 4 hours (offset from meme-bombs)
+
+name: Cursed Edits
+
+on:
+  schedule:
+    - cron: "30 */4 * * *"  # Every 4 hours, 30min offset
+  workflow_dispatch:
+
+jobs:
+  render:
+    uses: ./.github/workflows/render.yml
+    with:
+      concept: cursed-edits
+      brand: shitpostfactoryhq
+    secrets: inherit
