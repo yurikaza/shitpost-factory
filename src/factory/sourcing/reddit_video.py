@@ -1,16 +1,13 @@
-"""Reddit video sourcing. Fetches short funny video clips from subreddits.
+"""Reddit video sourcing via pullpush.io (public archive, no API key needed).
 
-Uses PRAW (Python Reddit API Wrapper) to find video posts, then downloads
-the MP4 directly from Reddit's CDN or i.redd.it.
-
-Requires REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET in .env.
+Uses pullpush.io to search for video posts, then downloads with yt-dlp.
+No Reddit API credentials required.
 """
 from __future__ import annotations
 
 import hashlib
 import logging
-import os
-import re
+import subprocess
 from pathlib import Path
 
 import httpx
@@ -20,29 +17,16 @@ from factory.types import SourcedClip
 
 log = logging.getLogger(__name__)
 
+_API_BASE = "https://api.pullpush.io/reddit/search/submission/"
+
 
 class RedditVideoProvider(FootageProvider):
-    """Fetch short video clips from Reddit subreddits."""
+    """Fetch short video clips from Reddit via pullpush.io."""
 
     name = "reddit-video"
 
     def __init__(self, dry_run: bool = False):
         self._dry_run = dry_run
-        self._client_id = os.getenv("REDDIT_CLIENT_ID", "")
-        self._client_secret = os.getenv("REDDIT_CLIENT_SECRET", "")
-        self._user_agent = os.getenv("REDDIT_USER_AGENT", "shitpost-factory/0.1")
-        self._reddit = None
-
-    def _get_reddit(self):
-        """Lazy-init PRAW Reddit instance."""
-        if self._reddit is None:
-            import praw
-            self._reddit = praw.Reddit(
-                client_id=self._client_id,
-                client_secret=self._client_secret,
-                user_agent=self._user_agent,
-            )
-        return self._reddit
 
     def search(
         self,
@@ -52,44 +36,51 @@ class RedditVideoProvider(FootageProvider):
         max_duration_s: float = 15,
         min_duration_s: float = 3,
     ) -> list[SourcedClip]:
-        """Search a subreddit for video posts matching criteria."""
+        """Search a subreddit for video posts."""
         if self._dry_run:
             return self._fixture_search(subreddit, limit)
 
-        reddit = self._get_reddit()
+        log.info("Reddit search: r/%s limit=%d min_upvotes=%d", subreddit, limit, min_upvotes)
+
+        params = {
+            "subreddit": subreddit,
+            "is_video": "true",
+            "sort": "desc",
+            "sort_type": "score",
+            "size": limit * 2,  # fetch extra to filter
+        }
+
+        with httpx.Client(timeout=30) as client:
+            resp = client.get(_API_BASE, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
         clips = []
-
-        log.info("Reddit video search: r/%s limit=%d min_upvotes=%d", subreddit, limit, min_upvotes)
-
-        for submission in reddit.subreddit(subreddit).hot(limit=limit * 3):
-            # Filter: must be a video post with enough upvotes
-            if submission.score < min_upvotes:
-                continue
-            if submission.is_self:
+        for post in data.get("data", []):
+            score = post.get("score", 0)
+            if score < min_upvotes:
                 continue
 
-            # Get video URL
-            video_url = self._extract_video_url(submission)
-            if not video_url:
+            url = post.get("url", "")
+            if not url:
                 continue
 
-            # Check duration if available
-            duration = getattr(submission, "media", {})
-            if isinstance(duration, dict):
-                reddit_video = duration.get("reddit_video", {})
-                dur = reddit_video.get("duration", 0)
-                if dur and (dur < min_duration_s or dur > max_duration_s):
-                    continue
+            # Only v.redd.it and imgur links
+            if "v.redd.it" not in url and "imgur.com" not in url:
+                continue
+
+            title = post.get("title", "")
+            post_id = post.get("id", "")
 
             clips.append(SourcedClip(
                 provider="reddit-video",
-                external_id=submission.id,
-                url=video_url,
+                external_id=post_id,
+                url=url,
                 local_path=None,
-                duration_s=float(dur) if dur else 10.0,
+                duration_s=10.0,  # unknown until download
                 width=1080,
                 height=1920,
-                attribution=f"r/{subreddit} u/{submission.author}",
+                attribution=f"r/{subreddit} u/{post.get('author', 'unknown')}",
             ))
 
             if len(clips) >= limit:
@@ -98,34 +89,8 @@ class RedditVideoProvider(FootageProvider):
         log.info("Reddit: found %d video clips in r/%s", len(clips), subreddit)
         return clips
 
-    def _extract_video_url(self, submission) -> str | None:
-        """Extract the direct MP4 URL from a Reddit submission."""
-        # Reddit hosted video
-        if hasattr(submission, "media") and submission.media:
-            reddit_video = submission.media.get("reddit_video", {})
-            fallback_url = reddit_video.get("fallback_url")
-            if fallback_url:
-                return fallback_url
-
-        # i.redd.it video
-        if submission.url and "v.redd.it" in submission.url:
-            return submission.url
-
-        # External video link (imgur, streamable, etc.)
-        if submission.url:
-            url = submission.url
-            if "imgur.com" in url and not url.endswith(".jpg"):
-                # Imgur gifv/mp4
-                if url.endswith(".gifv"):
-                    url = url.replace(".gifv", ".mp4")
-                return url
-            if "streamable.com" in url:
-                return url
-
-        return None
-
     def download(self, clip: SourcedClip, dest: Path) -> Path:
-        """Download a video clip to dest."""
+        """Download a video using yt-dlp."""
         if self._dry_run:
             return self._fixture_download(clip, dest)
 
@@ -135,20 +100,39 @@ class RedditVideoProvider(FootageProvider):
         dest.mkdir(parents=True, exist_ok=True)
         output_path = dest / f"reddit_{clip.external_id}.mp4"
 
-        log.info("Downloading Reddit clip %s -> %s", clip.external_id, output_path)
+        log.info("Downloading Reddit clip %s (%s) -> %s", clip.external_id, clip.url, output_path)
 
-        headers = {"User-Agent": self._user_agent}
-        with httpx.Client(timeout=120, follow_redirects=True) as client:
-            with client.stream("GET", clip.url, headers=headers) as resp:
-                resp.raise_for_status()
-                with open(output_path, "wb") as f:
-                    for chunk in resp.iter_bytes(chunk_size=8192):
-                        f.write(chunk)
+        cmd = [
+            "yt-dlp",
+            "-o", str(output_path),
+            "--no-playlist",
+            "--quiet",
+            "--no-warnings",
+            clip.url,
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode != 0:
+            raise RuntimeError(f"yt-dlp failed: {result.stderr[:200]}")
+
+        if not output_path.exists():
+            # yt-dlp might add extension
+            candidates = list(dest.glob(f"reddit_{clip.external_id}.*"))
+            if candidates:
+                candidates[0].rename(output_path)
+            else:
+                raise RuntimeError(f"Download succeeded but file not found: {output_path}")
+
+        # Update duration from downloaded file
+        try:
+            from factory.render.ffmpeg_utils import get_duration
+            clip.duration_s = get_duration(output_path)
+        except Exception:
+            pass
 
         return output_path
 
     def _fixture_search(self, subreddit: str, limit: int) -> list[SourcedClip]:
-        """Return fixture clips for offline testing."""
         clips = []
         for i in range(min(limit, 3)):
             clips.append(SourcedClip(
@@ -164,7 +148,6 @@ class RedditVideoProvider(FootageProvider):
         return clips
 
     def _fixture_download(self, clip: SourcedClip, dest: Path) -> Path:
-        """Create a fixture video for offline testing."""
         import subprocess
         dest.mkdir(parents=True, exist_ok=True)
         output_path = dest / f"reddit_{clip.external_id}.mp4"

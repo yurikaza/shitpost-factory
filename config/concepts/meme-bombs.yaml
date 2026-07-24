@@ -17,19 +17,19 @@ account:
   handle_instagram: ""
 
 sourcing:
-  mode: stock
-  providers: [pexels]
+  mode: reddit-video
   clips_per_video: 3
-  queries:
-    - funny animals
-    - cute animal fails
-    - animals doing tricks
-    - funny fails
-    - unexpected moments
-    - weird satisfying
-    - cat fails
-    - dog fails
-  min_clip_duration_s: 3
+  min_upvotes: 10000
+  max_duration_s: 15
+  min_duration_s: 3
+  subreddits:
+    - AnimalsBeingDerps
+    - funny
+    - Unexpected
+    - abruptchaos
+    - therewasanattempt
+    - Whatcouldgowrong
+    - MadeMeSmile
 
 script:
   target_words: 30
