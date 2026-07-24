@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shitpost Factory - Privacy Policy</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; }
+        h1 { color: #1a1a1a; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        h2 { color: #2a2a2a; margin-top: 30px; }
+        h3 { color: #3a3a3a; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        strong { color: #1a1a1a; }
+        .last-updated { color: #666; font-style: italic; }
+        .nav { margin-bottom: 30px; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #0066cc; }
+        .nav a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+    </div>
+
+    <h1>Privacy Policy</h1>
+    <p class="last-updated">Last updated: July2026</p>
+
+    <h2>Information We Collect</h2>
+
+    <h3>Information You Provide</h3>
+    <ul>
+        <li><strong>Account Information:</strong> Brand names, content preferences, publishing schedules</li>
+        <li><strong>API Credentials:</strong> OAuth tokens for social media platforms (stored locally in `tokens/` directory)</li>
+        <li><strong>Content Configuration:</strong> YAML files defining content concepts and publishing settings</li>
+    </ul>
+
+    <h3>Information Collected Automatically</h3>
+    <ul>
+        <li><strong>Usage Data:</strong> Pipeline execution logs, render times, publish status</li>
+        <li><strong>Technical Data:</strong> Error logs, API response codes</li>
+    </ul>
+
+    <h3>Information from Third Parties</h3>
+    <ul>
+        <li><strong>Social Media APIs:</strong> Username, profile picture (via user.info.basic scope)</li>
+        <li><strong>Content APIs:</strong> Royalty-free footage metadata from Pexels</li>
+    </ul>
+
+    <h2>How We Use Information</h2>
+    <p>We use collected information to:</p>
+    <ul>
+        <li>Generate and publish content to your authorized social media accounts</li>
+        <li>Maintain and improve the Service</li>
+        <li>Debug errors and monitor pipeline performance</li>
+        <li>Authenticate and authorize access to social media platforms</li>
+    </ul>
+
+    <h2>Data Storage</h2>
+    <ul>
+        <li><strong>Local Storage:</strong> API tokens, configuration files, and logs are stored locally on your machine or GitHub Actions runner</li>
+        <li><strong>No Cloud Database:</strong> The Service does not use a cloud database. All data remains on your infrastructure</li>
+        <li><strong>GitHub:</strong> Source code and configuration are stored in your GitHub repository</li>
+    </ul>
+
+    <h2>Data Sharing</h2>
+    <p>We do not sell, trade, or share your personal information with third parties, except:</p>
+    <ul>
+        <li><strong>Social Media Platforms:</strong> Content is published to your authorized accounts via official APIs</li>
+        <li><strong>GitHub:</strong> Source code and configuration are stored in your GitHub repository</li>
+        <li><strong>Legal Requirements:</strong> If required by law or to protect our rights</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <p>The Service integrates with:</p>
+    <ul>
+        <li><strong>TikTok:</strong> Content Posting API (video.publish, user.info.basic scopes)</li>
+        <li><strong>Instagram:</strong> Instagram Graph API (requires Facebook Business account)</li>
+        <li><strong>YouTube:</strong> YouTube Data API v3 (requires Google Cloud project)</li>
+        <li><strong>Pexels:</strong> Royalty-free footage API</li>
+        <li><strong>Xiaomi MiMo:</strong> AI language model for text generation</li>
+    </ul>
+    <p>Each third-party service has its own privacy policy. We encourage you to review their policies.</p>
+
+    <h2>Data Security</h2>
+    <p>We implement reasonable security measures to protect your data:</p>
+    <ul>
+        <li>API tokens are stored locally and never committed to version control</li>
+        <li>OAuth tokens are refreshed automatically and expire after24 hours</li>
+        <li>Refresh tokens expire after365 days</li>
+        <li>All API communication uses HTTPS</li>
+    </ul>
+
+    <h2>Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+        <li>Access your data stored in the Service</li>
+        <li>Delete your data by removing configuration files and tokens</li>
+        <li>Revoke API access through social media platform settings</li>
+        <li>Disable or delete your account at any time</li>
+    </ul>
+
+    <h2>Data Retention</h2>
+    <ul>
+        <li>API tokens: Retained until you delete them or they expire</li>
+        <li>Configuration files: Retained until you delete them</li>
+        <li>Logs: Retained for30 days, then automatically deleted</li>
+        <li>Rendered videos: Deleted immediately after publishing (when using --cleanup flag)</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>The Service is not intended for use by children under13. We do not knowingly collect personal information from children.</p>
+
+    <h2>Changes to Privacy Policy</h2>
+    <p>We may update this Privacy Policy from time. We will notify you of any changes by posting the new Privacy Policy on this page.</p>
+
+    <h2>Contact</h2>
+    <p>For questions about this Privacy Policy, contact: <a href="mailto:your-email@example.com">your-email@example.com</a></p>
+</body>
+</html>
