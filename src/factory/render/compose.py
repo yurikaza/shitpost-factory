@@ -167,7 +167,9 @@ def compose_video(
             if abs(src_ratio - dst_ratio) < 0.01:
                 transcode(clip.local_path, out, crf=crf, preset=preset)
             else:
-                _reframe_vertical(clip.local_path, out, width, height)
+                # Use blur-fill for landscape clips — keeps full content visible
+                # with blurred background behind. Much better than hard crop.
+                _blur_fill(clip.local_path, out, width, height)
             reframed_clips.append(out)
 
         if not reframed_clips:
