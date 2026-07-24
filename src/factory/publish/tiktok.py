@@ -30,6 +30,9 @@ from typing import Any
 
 import requests
 
+from factory.publish.base import Publisher
+from factory.types import PublishResult, RenderedVideo, Script
+
 log = logging.getLogger(__name__)
 
 # TikTok API endpoints
@@ -397,3 +400,44 @@ def publish_video(
         return {"publish_id": publish_id, "status": "PROCESSING", "data": None}
 
     return {"publish_id": publish_id, "status": "UPLOADED", "data": None}
+
+
+class TikTokPublisher(Publisher):
+    """TikTok video publisher."""
+    platform = "tiktok"
+
+    def __init__(self, dry_run: bool = False):
+        self.dry_run = dry_run
+
+    def publish(self, video: RenderedVideo, script: Script) -> PublishResult:
+        """Publish a video to TikTok."""
+        try:
+            brand = os.environ.get("FACTORY_BRAND", "default")
+
+            # Build title with hashtags
+            hashtags = " ".join(f"#{tag}" for tag in script.hashtags[:5])
+            title = f"{script.hook} {hashtags}"
+
+            if self.dry_run:
+                log.info("[DRY RUN] Would publish to TikTok: %s", title)
+                return PublishResult(ok=True, platform=self.platform, post_id="dry_run")
+
+            result = publish_video(
+                brand=brand,
+                video_path=video.path,
+                title=title,
+                privacy_level="SELF_ONLY",  # Default to private until audited
+                wait_for_status=True,
+            )
+
+            return PublishResult(
+                ok=True,
+                platform=self.platform,
+                post_id=result.get("publish_id", ""),
+            )
+        except Exception as e:
+            log.error("TikTok publish failed: %s", e)
+            return PublishResult(ok=False, platform=self.platform, error=str(e))
+
+    def close(self) -> None:
+        pass
