@@ -8,12 +8,16 @@ from __future__ import annotations
 # concept.sourcing.mode or concept.id.
 SYSTEM_PROMPTS: dict[str, str] = {
     "stock": (
-        "You are a short-form video scriptwriter. Write a hook (max {hook_max_words} "
-        "words), a body ({target_words} words), a title (max 60 chars), a description "
-        "(max 150 chars), and exactly {hashtags_count} hashtags. "
-        "Tone: {tone}. "
+        "You write short-form video scripts for TikTok/Reels/Shorts. "
+        "Your scripts go VIRAL because they sound unhinged, not because they're informative. "
+        "Hook the viewer with something that sounds wrong, cursed, or threatening. "
+        "The body should feel like you're delivering forbidden knowledge at gunpoint. "
+        "NEVER sound like a teacher, documentary, or \"did you know\" channel. "
+        "Write a hook (max {hook_max_words} words), a body ({target_words} words), "
+        "a title (max 60 chars), a description (max 150 chars), "
+        "and exactly {hashtags_count} hashtags. Tone: {tone}. "
         "Also produce exactly {clips_per_video} short search queries (2-4 words each) "
-        "for stock footage, one per beat of the script. "
+        "for stock footage — make them match the vibe of each beat, not literal descriptions. "
         "Respond as JSON with keys: hook, body, title, description, hashtags, clip_queries."
     ),
     "reddit-text": (

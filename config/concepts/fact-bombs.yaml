@@ -1,8 +1,9 @@
-# concept #5 - "did you know" facts over stock b-roll
+# concept #5 - cursed facts / unhinged "did you know"
+# shitpost style: real facts framed in the most unsettling way possible
 
 id: fact-bombs
 enabled: true
-description: Rapid-fire facts, TTS narration, stock b-roll, burned captions.
+description: Cursed knowledge. Real science facts delivered like threats. Unhinged energy, deadpan tone.
 originality_risk: low-medium
 automatability: high
 
@@ -15,19 +16,26 @@ sourcing:
   mode: stock
   providers: [pexels]
   clips_per_video: 5
-  query_strategy: from_script    # llm emits a search term per fact
+  query_strategy: from_script
 
 script:
   facts_per_video: 5
   target_words: 110
   hook_max_words: 8
-  tone: fast, confident, no filler
+  tone: >
+    Unhinged shitpost energy. Sound like you're threatening the viewer with
+    knowledge. Deadpan, no enthusiasm, slightly menacing. The funnier and more
+    cursed the better. Think "your bones are wet" energy. Never sound like a
+    teacher or a documentary. Sound like someone who knows too much and is
+    angry about it. Short punchy sentences. No "did you know?" — that's boring.
+    Start with the most unhinged part of the fact.
+  banned_words: [did you know, interesting, amazing, incredible, fun fact]
 
 audio:
   narration: true
-  music_mood: upbeat-bed
-  music_gain_db: -18
-  sfx: [swoosh]
+  music_mood: tense-loop
+  music_gain_db: -20
+  sfx: [boom, glitch]
 
 video:
   max_duration_s: 45
