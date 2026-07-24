@@ -1,91 +1,129 @@
 # shitpost-factory
 
-Automated faceless short-form video pipeline. Sources royalty-free footage, writes a script
-with an LLM, renders a 9:16 vertical video with burned-in captions, publishes to TikTok /
-Instagram Reels / YouTube Shorts every 8 hours.
+Automated faceless short-form video pipeline. Sources viral Reddit clips, writes shitpost
+text with MiMo LLM, renders vertical videos with text overlays and montage effects,
+publishes to TikTok / Instagram Reels / YouTube Shorts.
 
-Status: **working pipeline.** Renders videos end-to-end. Publishing requires API keys and
-Postiz setup.
+Status: **working pipeline.** Renders videos end-to-end via GitHub Actions. Publishing
+requires social media API keys.
 
-## The five stages
+## How it works
 
 ```
-1. source   Pexels / Pixabay CC0 footage, or Reddit text        sourcing/
-2. script   LLM writes hook, body, title, hashtags              scripting/
-3. audio    TTS narration + CC0 music bed + SFX                 audio/
-4. render   FFmpeg -> 1080x1920 H.264 + burned captions         render/
-5. publish  Postiz -> TikTok, Instagram, YouTube                publish/
+1. source   Reddit clips (pullpush.io + yt-dlp) or stock footage
+2. script   MiMo LLM writes shitpost text overlay
+3. render   Pillow text → FFmpeg montage (zoom/speed/cuts) → 9:16 vertical
+4. publish  → TikTok, Instagram, YouTube
 ```
 
 ## Quick start
 
 ```bash
-cp .env.example .env          # fill in keys
-# optionally drop a .ttf into assets/fonts/ for custom caption font
-make setup
-make check
-make run CONCEPT=text-pov     # renders, does not publish
+cp .env.example .env          # fill in API keys
+pip install -r requirements.txt
+
+# Render one concept
+PYTHONPATH=src FACTORY_BRAND=shitpostfactoryhq python -m factory.cli run --concept meme-bombs
+
+# Render all concepts for a brand
+PYTHONPATH=src FACTORY_BRAND=shitpostfactoryhq python -m factory.cli run-all
+
+# Check setup
+PYTHONPATH=src python -m factory.cli doctor
 ```
 
-## What works
+## Brands
 
-- **text-pov** — generated gradient background + TTS narration + word-by-word captions
-- **fact-bombs** — stock footage (Pexels/Pixabay) + TTS facts + burned captions
-- **reddit-stories** — Reddit-sourced text over gradient background (disabled by default)
-- **satisfying-loops** — stock footage loops (disabled by default)
-- Edge-TTS narration (free, no API key)
-- FFmpeg-based 9:16 rendering with caption burn-in via ASS subtitles
-- Audio normalization to -14 LUFS
-- Deduplication across runs (SQLite state store)
-- Dry-run mode — renders with fixture data, no network calls needed
+Each brand/channel has its own folder under `social-media-pipeline/`:
 
-## Adding an account
+```
+social-media-pipeline/
+├── shitpostfactoryhq/          ← first brand
+│   ├── config/concepts/
+│   │   ├── meme-bombs.yaml     ← viral Reddit clips + shitpost text
+│   │   ├── cursed-edits.yaml   ← bizarre clips + unhinged text
+│   │   └── wholesome-unhinged.yaml ← wholesome clips + chaotic text
+│   ├── output/
+│   └── work/
+└── [your-next-brand]/          ← add more brands here
+```
 
-Add a YAML file to `config/concepts/`. That's it. If a new concept needs new Python,
-the abstraction is wrong.
+## Concepts (shitpostfactoryhq)
 
-## Non-negotiables
+| Concept | Source | Tone | Duration |
+|---------|--------|------|----------|
+| `meme-bombs` | Reddit clips (15 subs) | Unhinged shitpost | 15s |
+| `cursed-edits` | Reddit clips (10 subs) | Deeply disturbed | 12s |
+| `wholesome-unhinged` | Reddit clips (6 subs) | War documentary on cute things | 15s |
 
-1. No reposting other people's videos — CC0 stock or self-recorded only.
-2. No AI-generated video — AI writes text and speaks, that's all.
-3. CPU-only rendering, free-tier hosting.
-4. Every video must be transformative (own narration, own captions, own edit).
+## GitHub Actions (free hosting)
 
-Reasoning in `docs/research-2026.md` and `docs/decisions/`.
+Automated rendering via GitHub Actions — **free for public repos**:
+
+| Workflow | Schedule | Concept |
+|----------|----------|---------|
+| `meme-bombs.yml` | Every 4 hours | meme-bombs |
+| `cursed-edits.yml` | Every 4 hours (30min offset) | cursed-edits |
+| `wholesome-unhinged.yml` | Every 4 hours (15min offset) | wholesome-unhinged |
+
+All workflows use `--cleanup` flag — no videos stored in artifacts.
+
+### Required GitHub Secrets
+
+| Secret | Value |
+|--------|-------|
+| `MIMO_API_KEY` | MiMo token plan API key |
+| `MIMO_BASE_URL` | `https://token-plan-sgp.xiaomimimo.com/v1` |
+| `MIMO_MODEL` | `mimo-v2.5` |
+| `PEXELS_API_KEY` | Pexels API key (optional, for stock footage concepts) |
+
+## Adding a new brand
+
+1. Create folder: `social-media-pipeline/<brand-name>/config/concepts/`
+2. Add concept YAML files (copy from shitpostfactoryhq as template)
+3. Create GitHub Actions workflow: `.github/workflows/<concept>.yml`
+4. Set up social media accounts
+5. Add publishing API keys to GitHub Secrets
+
+## Adding a new concept
+
+Add a YAML file to `social-media-pipeline/<brand>/config/concepts/`. The pipeline
+auto-discovers all enabled concepts.
 
 ## Stack
 
-- Python 3.11+
-- FFmpeg for rendering (subprocess, not MoviePy)
-- faster-whisper for word-level caption timing
-- edge-tts for narration (free, no key)
-- Postiz for publishing (self-hosted)
-- MiMo (Xiaomi) for script generation (free tier)
+- **Python 3.12** — pipeline orchestration
+- **MiMo (Xiaomi)** — LLM for shitpost text generation (free token plan)
+- **Pillow** — text overlay rendering (Impact font, white + black outline)
+- **FFmpeg** — video composition, montage effects, format conversion
+- **pullpush.io** — Reddit content discovery (no API key needed)
+- **yt-dlp** — video downloading from Reddit/Imgur
+- **Edge-TTS** — text-to-speech (free, for narration concepts)
+- **GitHub Actions** — free automated scheduling and rendering
 
-## Configuration
+## Non-negotiables
 
-| Variable | Purpose |
-|----------|---------|
-| `DRY_RUN` | `true` = render with fixtures, never publish (default) |
-| `MIMO_API_KEY` | MiMo LLM for script generation (free) |
-| `PEXELS_API_KEY` | Stock footage (200 req/hr free tier) |
-| `REDDIT_CLIENT_ID/SECRET` | Reddit stories sourcing |
-| `POSTIZ_API_KEY` | Self-hosted Postiz instance |
-
-## Deployment
-
-Primary: Oracle Cloud Always Free ARM VM (`scripts/setup_vm.sh`), real cron, Postiz on the
-same box. Fallback: `.github/workflows/produce.yml` — note GitHub cron drifts 15–45 min and
-scheduled workflows pause after 60 days without a push.
+1. No reposting other people's videos — Reddit clips are transformative with text overlay
+2. No AI-generated video — AI writes text only
+3. CPU-only rendering, free-tier hosting
+4. Every video must be transformative
 
 ## Layout
 
 ```
-CLAUDE.md              project context, auto-loaded by Claude Code
-docs/research-2026.md  the research this is built on — read before deciding anything
-docs/decisions/        ADRs
-config/concepts/       one YAML per account
-src/factory/           the pipeline
-assets/                fonts, backgrounds, sfx, music (contents gitignored)
-work/ output/ logs/    runtime, gitignored
+.github/workflows/         GitHub Actions (scheduled rendering)
+social-media-pipeline/     brand folders (configs, output, work)
+src/factory/               shared pipeline code
+assets/                    fonts, music (gitignored contents)
+config/                    default concept configs (fallback)
+docs/                      research, decisions
 ```
+
+## API Keys
+
+| Key | Purpose | Free? |
+|-----|---------|-------|
+| MiMo token plan | LLM text generation | ✅ Free tier |
+| Pexels | Stock footage | ✅ 200 req/hr |
+| Reddit (pullpush.io) | Content discovery | ✅ No key needed |
+| Edge-TTS | Text-to-speech | ✅ Free |

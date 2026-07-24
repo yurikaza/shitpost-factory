@@ -13,7 +13,7 @@ on:
       brand:
         required: true
         type: string
-        description: Brand name (folder under brands/)
+        description: Brand name (folder under social-media-pipeline/)
 
 env:
   FACTORY_BRAND: ${{ inputs.brand }}

@@ -31,7 +31,7 @@ def _setup_logging(level: str = "INFO") -> None:
 @app.command()
 def run(
     concept: str = typer.Option(..., "--concept", "-c", help="Concept ID to produce"),
-    brand: str = typer.Option(None, "--brand", "-b", help="Brand name (uses brands/<brand>/ config)"),
+    brand: str = typer.Option(None, "--brand", "-b", help="Brand name (uses social-media-pipeline/<brand>/ config)"),
     publish: bool = typer.Option(False, "--publish", "-p", help="Actually publish to platforms"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
     cleanup: bool = typer.Option(False, "--cleanup", help="Delete output after rendering"),

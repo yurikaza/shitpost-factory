@@ -113,7 +113,7 @@ def _get_brand_root() -> Path | None:
     """Return brand root path if FACTORY_BRAND env var is set."""
     brand = os.environ.get("FACTORY_BRAND")
     if brand:
-        brand_root = _PROJECT_ROOT / "brands" / brand
+        brand_root = _PROJECT_ROOT / "social-media-pipeline" / brand
         if brand_root.exists():
             return brand_root
     return None

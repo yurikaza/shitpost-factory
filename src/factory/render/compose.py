@@ -33,7 +33,7 @@ def _get_output_dir() -> Path:
     import os
     brand = os.environ.get("FACTORY_BRAND")
     if brand:
-        brand_output = _PROJECT_ROOT / "brands" / brand / "output"
+        brand_output = _PROJECT_ROOT / "social-media-pipeline" / brand / "output"
         brand_output.mkdir(parents=True, exist_ok=True)
         return brand_output
     return _PROJECT_ROOT / "output"
