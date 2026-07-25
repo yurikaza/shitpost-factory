@@ -64,20 +64,22 @@ jobs:
           EOF
 
       - name: Render video
-        id: render
         run: |
           PYTHONPATH=src python -m factory.cli run \
             --concept ${{ inputs.concept }} \
             --brand ${{ inputs.brand }} \
             --cleanup
 
-          # Find the latest rendered video (in brand output dir or root output dir)
+      - name: Find rendered video
+        id: render
+        run: |
           VIDEO=$(ls -t social-media-pipeline/${{ inputs.brand }}/output/${{ inputs.concept }}_*.mp4 output/${{ inputs.concept }}_*.mp4 2>/dev/null | head -1)
           if [ -n "$VIDEO" ]; then
             echo "video_path=$VIDEO" >> "$GITHUB_OUTPUT"
             echo "📹 Rendered: $VIDEO"
           else
-            echo "⚠️ No video found in output/"
+            echo "⚠️ No video found"
+            exit 1
           fi
 
       - name: Upload to YouTube
