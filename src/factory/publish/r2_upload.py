@@ -13,8 +13,12 @@ import os
 import uuid
 from pathlib import Path
 
-import boto3
-from botocore.config import Config
+try:
+    import boto3
+    from botocore.config import Config
+except ImportError:
+    boto3 = None  # type: ignore[assignment]
+    Config = None  # type: ignore[assignment,misc]
 
 log = logging.getLogger(__name__)
 
