@@ -105,27 +105,27 @@ class RedditVideoProvider(FootageProvider):
         dest.mkdir(parents=True, exist_ok=True)
         output_path = dest / f"reddit_{clip.external_id}.mp4"
 
-        # Extract post ID and construct direct CDN URL
-        post_id = clip.external_id
-        cdn_url = f"https://v.redd.it/{post_id}/DASH_480.mp4"
+        # Extract v.redd.it video ID from URL (not the post ID)
+        # URL format: https://v.redd.it/{video_id}
+        video_id = clip.url.split("v.redd.it/")[-1].split("/")[0].split("?")[0] if "v.redd.it" in (clip.url or "") else clip.external_id
 
-        log.info("Downloading Reddit clip %s from CDN: %s", post_id, cdn_url)
+        log.info("Downloading Reddit clip %s (vreddit=%s) from CDN", clip.external_id, video_id)
 
         # Try multiple resolutions
         for res in ["480", "360", "720"]:
-            url = f"https://v.redd.it/{post_id}/DASH_{res}.mp4"
+            url = f"https://v.redd.it/{video_id}/DASH_{res}.mp4"
             try:
                 resp = httpx.get(url, timeout=60, follow_redirects=True,
                                  headers={"User-Agent": "Mozilla/5.0"})
                 if resp.status_code == 200 and len(resp.content) > 1000:
                     output_path.write_bytes(resp.content)
-                    log.info("Downloaded %s (%d bytes, %sp)", post_id, len(resp.content), res)
+                    log.info("Downloaded %s (%d bytes, %sp)", video_id, len(resp.content), res)
                     break
             except Exception as e:
                 log.debug("Resolution %s failed: %s", res, e)
                 continue
         else:
-            raise RuntimeError(f"All CDN resolutions failed for {post_id}")
+            raise RuntimeError(f"All CDN resolutions failed for {video_id} (post={clip.external_id})")
 
         # Update duration from downloaded file
         try:
