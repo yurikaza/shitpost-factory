@@ -71,8 +71,8 @@ jobs:
             --brand ${{ inputs.brand }} \
             --cleanup
 
-          # Find the latest rendered video
-          VIDEO=$(ls -t output/${{ inputs.concept }}_*.mp4 2>/dev/null | head -1)
+          # Find the latest rendered video (in brand output dir or root output dir)
+          VIDEO=$(ls -t social-media-pipeline/${{ inputs.brand }}/output/${{ inputs.concept }}_*.mp4 output/${{ inputs.concept }}_*.mp4 2>/dev/null | head -1)
           if [ -n "$VIDEO" ]; then
             echo "video_path=$VIDEO" >> "$GITHUB_OUTPUT"
             echo "📹 Rendered: $VIDEO"
