@@ -90,7 +90,12 @@ class RedditVideoProvider(FootageProvider):
         return clips
 
     def download(self, clip: SourcedClip, dest: Path) -> Path:
-        """Download a video using yt-dlp."""
+        """Download a Reddit video via direct CDN URL.
+
+        Uses v.redd.it CDN directly (no yt-dlp needed).
+        Reddit CDN serves video+audio separately; we download video only
+        since the pipeline adds its own TTS narration.
+        """
         if self._dry_run:
             return self._fixture_download(clip, dest)
 
@@ -100,28 +105,27 @@ class RedditVideoProvider(FootageProvider):
         dest.mkdir(parents=True, exist_ok=True)
         output_path = dest / f"reddit_{clip.external_id}.mp4"
 
-        log.info("Downloading Reddit clip %s (%s) -> %s", clip.external_id, clip.url, output_path)
+        # Extract post ID and construct direct CDN URL
+        post_id = clip.external_id
+        cdn_url = f"https://v.redd.it/{post_id}/DASH_480.mp4"
 
-        cmd = [
-            "yt-dlp",
-            "-o", str(output_path),
-            "--no-playlist",
-            "--quiet",
-            "--no-warnings",
-            clip.url,
-        ]
+        log.info("Downloading Reddit clip %s from CDN: %s", post_id, cdn_url)
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        if result.returncode != 0:
-            raise RuntimeError(f"yt-dlp failed: {result.stderr[:200]}")
-
-        if not output_path.exists():
-            # yt-dlp might add extension
-            candidates = list(dest.glob(f"reddit_{clip.external_id}.*"))
-            if candidates:
-                candidates[0].rename(output_path)
-            else:
-                raise RuntimeError(f"Download succeeded but file not found: {output_path}")
+        # Try multiple resolutions
+        for res in ["480", "360", "720"]:
+            url = f"https://v.redd.it/{post_id}/DASH_{res}.mp4"
+            try:
+                resp = httpx.get(url, timeout=60, follow_redirects=True,
+                                 headers={"User-Agent": "Mozilla/5.0"})
+                if resp.status_code == 200 and len(resp.content) > 1000:
+                    output_path.write_bytes(resp.content)
+                    log.info("Downloaded %s (%d bytes, %sp)", post_id, len(resp.content), res)
+                    break
+            except Exception as e:
+                log.debug("Resolution %s failed: %s", res, e)
+                continue
+        else:
+            raise RuntimeError(f"All CDN resolutions failed for {post_id}")
 
         # Update duration from downloaded file
         try:

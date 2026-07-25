@@ -22,6 +22,7 @@ import time
 import httpx
 
 from factory.publish.base import Publisher
+from factory.publish.r2_upload import R2Uploader
 from factory.types import PublishResult, RenderedVideo, Script
 
 log = logging.getLogger(__name__)
@@ -40,21 +41,18 @@ class InstagramPublisher(Publisher):
         access_token: str | None = None,
         ig_business_account_id: str | None = None,
         dry_run: bool = False,
+        r2_uploader: R2Uploader | None = None,
     ):
         self._access_token = access_token or os.getenv("IG_ACCESS_TOKEN", "")
         self._ig_user_id = ig_business_account_id or os.getenv("IG_BUSINESS_ACCOUNT_ID", "")
         self._dry_run = dry_run
+        self._r2 = r2_uploader
 
     def publish(self, video: RenderedVideo, script: Script) -> PublishResult:
         """Publish Reel to Instagram.
 
-        IMPORTANT: The video must be hosted at a publicly accessible URL.
-        This means the caller must either:
-        1. Upload the video to a public hosting service first, OR
-        2. Use a pre-signed URL that's accessible during the publish window.
-
-        For now, this implementation expects the video to already be at a URL.
-        In practice, this often means using a cloud storage signed URL.
+        Uploads video to Cloudflare R2 for a public URL, then publishes via Graph API.
+        Cleans up the R2 object after publish completes.
         """
         if self._dry_run:
             return self._fixture_publish(video, script)
@@ -67,13 +65,24 @@ class InstagramPublisher(Publisher):
 
         log.info("Instagram Reel publish: %s", video.path.name)
 
+        # Upload video to R2 for a public URL
+        video_url = None
+        r2_key = None
         try:
-            # Step 1: Create media container
-            # NOTE: video_url must be a publicly accessible URL to the mp4
-            # In a real deployment, we'd upload to a temp hosting service first
+            if self._r2 is None:
+                self._r2 = R2Uploader()
+            video_url, r2_key = self._r2.upload_and_get_url(video.path)
+            log.info("Video hosted at: %s", video_url)
+        except Exception as e:
+            return PublishResult(
+                platform="instagram", ok=False, post_id=None, url=None,
+                error=f"R2 upload failed: {e}",
+            )
+
+        try:
             container_body = {
                 "media_type": "REELS",
-                "video_url": str(video.path),  # TODO: must be a public URL
+                "video_url": video_url,
                 "caption": self._format_caption(script),
                 "access_token": self._access_token,
             }
@@ -136,6 +145,13 @@ class InstagramPublisher(Publisher):
                 platform="instagram", ok=False, post_id=None, url=None,
                 error=str(e),
             )
+        finally:
+            # Clean up R2 temp file after publish
+            if r2_key and self._r2:
+                try:
+                    self._r2.delete_video(r2_key)
+                except Exception:
+                    log.warning("Failed to clean up R2 key: %s", r2_key)
 
     def _poll_container(self, container_id: str, max_wait: int = 300) -> str:
         """Poll container status until FINISHED, ERROR, or timeout."""
