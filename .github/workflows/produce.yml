@@ -36,6 +36,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -e .
+          pip install yt-dlp
 
       - name: cache whisper model
         uses: actions/cache@v4
@@ -89,6 +90,8 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -e .
+
+          pip install yt-dlp
 
       - name: run tests
         run: python -m pytest tests/ -q

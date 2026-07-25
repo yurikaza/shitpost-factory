@@ -27,6 +27,14 @@ ACCESS_TOKEN=$(curl -s -X POST https://oauth2.googleapis.com/token \
   -d "refresh_token=$REFRESH_TOKEN" \
   -d "grant_type=refresh_token" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
+# Auto-append #Shorts for vertical short videos
+if [[ "$TITLE" != *"#Shorts"* ]]; then
+  TITLE="${TITLE} #Shorts"
+fi
+if [[ "$DESCRIPTION" != *"#Shorts"* ]]; then
+  DESCRIPTION="${DESCRIPTION}\n\n#Shorts #shitpost #auto-generated"
+fi
+
 echo "📤 Uploading video: $TITLE"
 
 # Build metadata JSON
@@ -36,7 +44,7 @@ meta = {
     'snippet': {
         'title': '''$TITLE''',
         'description': '''$DESCRIPTION''',
-        'tags': [t.strip() for t in '''$TAGS'''.split(',') if t.strip()],
+        'tags': [t.strip() for t in '''$TAGS'''.split(',') if t.strip()] + ['Shorts'],
         'categoryId': '22'
     },
     'status': {
