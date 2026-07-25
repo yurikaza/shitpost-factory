@@ -23,27 +23,30 @@ sourcing:
   max_duration_s: 15
   min_duration_s: 3
   subreddits:
-    # Animals
+    # Animals (faceless)
     - AnimalsBeingDerps
     - AnimalsBeingBros
-    # Fails & Wipeouts
-    - Whatcouldgowrong
-    - therewasanattempt
-    - nonononoyes
-    # Unexpected & Karma
-    - Unexpected
-    - instant_regret
-    - JusticeServed
-    # Weird & Cursed
-    - mildlyinfuriating
+    - aww
+    # Satisfying & Oddly Specific
+    - oddlysatisfying
+    - powerwashingporn
+    - Perfectfit
+    - specializedtools
+    # Nature & Science
+    - NatureIsFuckingLit
+    - chemicalreactiongifs
+    - EducationalGifs
+    # Objects & Design Fails
     - CrappyDesign
+    - mildlyinfuriating
+    - CatastrophicFailure
+    # Weird Perspectives
     - confusing_perspective
-    # Impressive
-    - nextfuckinglevel
-    - BeAmazed
-    # Wholesome (with shitpost text = comedy)
-    - MadeMeSmile
-    - HumansBeingBros
+    - Pareidolia
+    # Impressive (faceless)
+    - interestingasfuck
+    - woahdude
+    - Simulated
 
 script:
   target_words: 25

@@ -8,6 +8,7 @@ run ledger so a partial run can be resumed rather than restarted.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from factory.config import load_concept, load_settings, list_enabled_concepts
 from factory.publish.base import Publisher
 from factory.publish.instagram import InstagramPublisher
 from factory.publish.postiz import PostizPublisher
+from factory.publish.r2_upload import R2Uploader
 from factory.publish.tiktok import TikTokPublisher
 from factory.publish.youtube import YouTubePublisher
 from factory.render.compose import compose_video
@@ -54,7 +56,7 @@ def _build_provider(name: str, dry_run: bool = False) -> FootageProvider:
 def _build_publishers(concept: Concept, dry_run: bool = False) -> list[Publisher]:
     """Build publishers for a concept's configured platforms."""
     publishers = []
-    layer = "postiz"  # default; could come from settings
+    layer = os.getenv("PUBLISH_LAYER", "direct")  # postiz | direct
 
     if layer == "postiz":
         publishers.append(PostizPublisher(dry_run=dry_run))
@@ -62,7 +64,10 @@ def _build_publishers(concept: Concept, dry_run: bool = False) -> list[Publisher
         platform_map = {
             "youtube": lambda: YouTubePublisher(dry_run=dry_run),
             "tiktok": lambda: TikTokPublisher(dry_run=dry_run),
-            "instagram": lambda: InstagramPublisher(dry_run=dry_run),
+            "instagram": lambda: InstagramPublisher(
+                dry_run=dry_run,
+                r2_uploader=R2Uploader(),
+            ),
         }
         for platform in concept.publish.platforms:
             builder = platform_map.get(platform)
