@@ -381,6 +381,17 @@ def produce(
         # Stage 4: Render
         video = _stage_render(concept, material, script, audio)
 
+        # Save script metadata for CI/YouTube
+        import json as _json
+        meta_path = video.path.with_suffix(".json")
+        meta_path.write_text(_json.dumps({
+            "hook": script.hook,
+            "body": script.body,
+            "title": script.title,
+            "hashtags": script.hashtags,
+            "concept": concept_id,
+        }))
+
         store.finish_run(run_id, "rendered")
 
         # Stage 5: Publish
