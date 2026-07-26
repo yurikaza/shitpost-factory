@@ -31,8 +31,7 @@ assets/backgrounds/*
 !assets/backgrounds/.gitkeep
 assets/sfx/*
 !assets/sfx/.gitkeep
-assets/music/*
-!assets/music/.gitkeep
+
 assets/fonts/*
 !assets/fonts/.gitkeep
 
