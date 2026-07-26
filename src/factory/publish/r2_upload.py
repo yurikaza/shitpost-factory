@@ -34,11 +34,11 @@ class R2Uploader:
         bucket: str | None = None,
         public_url: str | None = None,
     ):
-        self._account_id = account_id or os.getenv("R2_ACCOUNT_ID", "")
-        self._access_key_id = access_key_id or os.getenv("R2_ACCESS_KEY_ID", "")
-        self._secret_access_key = secret_access_key or os.getenv("R2_SECRET_ACCESS_KEY", "")
-        self._bucket = bucket or os.getenv("R2_BUCKET", "shitpost-factory")
-        self._public_url = (public_url or os.getenv("R2_PUBLIC_URL", "")).rstrip("/")
+        self._account_id = (account_id or os.getenv("R2_ACCOUNT_ID", "")).strip()
+        self._access_key_id = (access_key_id or os.getenv("R2_ACCESS_KEY_ID", "")).strip()
+        self._secret_access_key = (secret_access_key or os.getenv("R2_SECRET_ACCESS_KEY", "")).strip()
+        self._bucket = (bucket or os.getenv("R2_BUCKET", "shitpost-factory")).strip()
+        self._public_url = (public_url or os.getenv("R2_PUBLIC_URL", "")).strip().rstrip("/")
 
         if not all([self._account_id, self._access_key_id, self._secret_access_key]):
             raise ValueError(

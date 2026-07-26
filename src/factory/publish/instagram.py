@@ -43,8 +43,8 @@ class InstagramPublisher(Publisher):
         dry_run: bool = False,
         r2_uploader: R2Uploader | None = None,
     ):
-        self._access_token = access_token or os.getenv("IG_ACCESS_TOKEN", "")
-        self._ig_user_id = ig_business_account_id or os.getenv("IG_BUSINESS_ACCOUNT_ID", "")
+        self._access_token = (access_token or os.getenv("IG_ACCESS_TOKEN", "")).strip()
+        self._ig_user_id = (ig_business_account_id or os.getenv("IG_BUSINESS_ACCOUNT_ID", "")).strip()
         self._dry_run = dry_run
         self._r2 = r2_uploader
 
