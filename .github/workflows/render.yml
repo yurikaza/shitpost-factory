@@ -56,7 +56,7 @@ jobs:
 
       - name: Create .env
         run: |
-          cat > .env << 'EOF'
+          cat > .env << 'ENVEOF'
           MIMO_API_KEY=${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL=${{ secrets.MIMO_BASE_URL }}
           MIMO_MODEL=${{ secrets.MIMO_MODEL }}
@@ -68,7 +68,9 @@ jobs:
           R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}
           IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}
           DRY_RUN=false
-          EOF
+          ENVEOF
+          # Trim whitespace from all values
+          sed -i 's/^[[:space:]]*//;s/[[:space:]]*$//' .env
 
       - name: Render video
         run: |
