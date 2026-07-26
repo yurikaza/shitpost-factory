@@ -65,8 +65,8 @@ class RedditVideoProvider(FootageProvider):
             if not url:
                 continue
 
-            # Only v.redd.it and imgur links
-            if "v.redd.it" not in url and "imgur.com" not in url:
+            # Only v.redd.it links (imgur CDN downloads need different handling)
+            if "v.redd.it" not in url:
                 continue
 
             title = post.get("title", "")

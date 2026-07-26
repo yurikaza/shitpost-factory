@@ -123,7 +123,23 @@ class OpenAICompatClient(LLMClient):
             cleaned = cleaned.split("\n", 1)[1]
         if cleaned.endswith("```"):
             cleaned = cleaned.rsplit("```", 1)[0]
-        return json.loads(cleaned.strip())
+        cleaned = cleaned.strip()
+        # Try to extract JSON from response (LLM sometimes adds extra text)
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            # Find first { ... } block
+            start = cleaned.find("{")
+            if start >= 0:
+                depth = 0
+                for i, ch in enumerate(cleaned[start:], start):
+                    if ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                        if depth == 0:
+                            return json.loads(cleaned[start:i + 1])
+            raise
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +190,21 @@ class GeminiClient(LLMClient):
             cleaned = cleaned.split("\n", 1)[1]
         if cleaned.endswith("```"):
             cleaned = cleaned.rsplit("```", 1)[0]
-        return json.loads(cleaned.strip())
+        cleaned = cleaned.strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            start = cleaned.find("{")
+            if start >= 0:
+                depth = 0
+                for i, ch in enumerate(cleaned[start:], start):
+                    if ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                        if depth == 0:
+                            return json.loads(cleaned[start:i + 1])
+            raise
 
 
 # ---------------------------------------------------------------------------
