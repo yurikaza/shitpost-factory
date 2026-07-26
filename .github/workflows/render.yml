@@ -181,6 +181,7 @@ jobs:
           PYTHONPATH=src python3 -c "
           import os, sys
           from pathlib import Path
+          from datetime import datetime
           from factory.publish.instagram import InstagramPublisher
           from factory.publish.r2_upload import R2Uploader
           from factory.types import RenderedVideo, Script
@@ -190,6 +191,8 @@ jobs:
               duration_s=15.0,
               width=1080,
               height=1920,
+              concept_id='${{ inputs.concept }}',
+              created_at=datetime.utcnow(),
           )
           script = Script(
               hook='',
