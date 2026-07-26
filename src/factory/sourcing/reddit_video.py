@@ -50,9 +50,24 @@ class RedditVideoProvider(FootageProvider):
             "size": limit * 2,  # fetch extra to filter
         }
 
-        with httpx.Client(timeout=30) as client:
-            resp = client.get(_API_BASE, params=params)
-            resp.raise_for_status()
+        with httpx.Client(timeout=30, headers={"User-Agent": "shitpost-factory/1.0"}) as client:
+            for attempt in range(3):
+                resp = client.get(_API_BASE, params=params)
+                if resp.status_code == 429:
+                    import time
+                    wait = int(resp.headers.get("Retry-After", 10))
+                    log.warning("Pullpush rate limited, waiting %ds", wait)
+                    time.sleep(wait)
+                    continue
+                if resp.status_code == 403:
+                    import time
+                    log.warning("Pullpush 403, retrying in 5s (attempt %d/3)", attempt + 1)
+                    time.sleep(5)
+                    continue
+                resp.raise_for_status()
+                break
+            else:
+                raise RuntimeError(f"Pullpush API failed after 3 attempts for r/{subreddit}")
             data = resp.json()
 
         clips = []
