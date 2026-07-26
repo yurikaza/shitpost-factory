@@ -116,30 +116,36 @@ class OpenAICompatClient(LLMClient):
             {"role": "system", "content": json_system},
             {"role": "user", "content": user},
         ]
-        raw = self._chat(messages, **kw)
-        # Strip markdown fences if present
-        cleaned = raw.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-        if cleaned.endswith("```"):
-            cleaned = cleaned.rsplit("```", 1)[0]
-        cleaned = cleaned.strip()
-        # Try to extract JSON from response (LLM sometimes adds extra text)
-        try:
-            return json.loads(cleaned)
-        except json.JSONDecodeError:
-            # Find first { ... } block
-            start = cleaned.find("{")
-            if start >= 0:
-                depth = 0
-                for i, ch in enumerate(cleaned[start:], start):
-                    if ch == "{":
-                        depth += 1
-                    elif ch == "}":
-                        depth -= 1
-                        if depth == 0:
-                            return json.loads(cleaned[start:i + 1])
-            raise
+        # Retry up to 2 times on empty/invalid responses
+        for attempt in range(3):
+            raw = self._chat(messages, **kw)
+            if not raw.strip():
+                log.warning("LLM returned empty response, attempt %d/3", attempt + 1)
+                continue
+            # Strip markdown fences if present
+            cleaned = raw.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("\n", 1)[1]
+            if cleaned.endswith("```"):
+                cleaned = cleaned.rsplit("```", 1)[0]
+            cleaned = cleaned.strip()
+            # Try to extract JSON from response (LLM sometimes adds extra text)
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                # Find first { ... } block
+                start = cleaned.find("{")
+                if start >= 0:
+                    depth = 0
+                    for i, ch in enumerate(cleaned[start:], start):
+                        if ch == "{":
+                            depth += 1
+                        elif ch == "}":
+                            depth -= 1
+                            if depth == 0:
+                                return json.loads(cleaned[start:i + 1])
+                log.warning("LLM returned invalid JSON, attempt %d/3", attempt + 1)
+        raise json.JSONDecodeError("LLM failed to return valid JSON after 3 attempts", "", 0)
 
 
 # ---------------------------------------------------------------------------
