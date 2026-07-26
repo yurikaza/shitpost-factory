@@ -7,6 +7,7 @@ into the render, platform-native audio libraries are not reachable via API.
 from __future__ import annotations
 
 import logging
+import random
 from pathlib import Path
 
 log = logging.getLogger(__name__)
@@ -27,10 +28,15 @@ def find_music(mood: str) -> Path | None:
         return None
 
     mood_lower = mood.lower()
+    matches = []
     for path in sorted(_MUSIC_DIR.iterdir()):
         if path.suffix.lower() in (".mp3", ".wav", ".ogg", ".m4a") and mood_lower in path.stem.lower():
-            log.info("Found music: %s (mood=%s)", path.name, mood)
-            return path
+            matches.append(path)
+
+    if matches:
+        chosen = random.choice(matches)
+        log.info("Found music: %s (mood=%s, %d matches)", chosen.name, mood, len(matches))
+        return chosen
 
     log.warning("No music file matching mood '%s' in %s", mood, _MUSIC_DIR)
     return None
