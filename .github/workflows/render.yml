@@ -67,8 +67,7 @@ jobs:
         run: |
           PYTHONPATH=src python -m factory.cli run \
             --concept ${{ inputs.concept }} \
-            --brand ${{ inputs.brand }} \
-            --cleanup
+            --brand ${{ inputs.brand }}
 
       - name: Find rendered video
         id: render

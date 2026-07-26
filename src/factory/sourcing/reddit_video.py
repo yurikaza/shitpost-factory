@@ -72,14 +72,18 @@ class RedditVideoProvider(FootageProvider):
             title = post.get("title", "")
             post_id = post.get("id", "")
 
+            # Extract video info from media field
+            media = post.get("media") or post.get("secure_media") or {}
+            media_info = media.get("reddit_video", {})
+
             clips.append(SourcedClip(
                 provider="reddit-video",
                 external_id=post_id,
                 url=url,
                 local_path=None,
-                duration_s=10.0,  # unknown until download
-                width=1080,
-                height=1920,
+                duration_s=float(media_info.get("duration", 10)),
+                width=int(media_info.get("width", 1080)),
+                height=int(media_info.get("height", 1920)),
                 attribution=f"r/{subreddit} u/{post.get('author', 'unknown')}",
             ))
 
@@ -90,11 +94,10 @@ class RedditVideoProvider(FootageProvider):
         return clips
 
     def download(self, clip: SourcedClip, dest: Path) -> Path:
-        """Download a Reddit video via direct CDN URL.
+        """Download a Reddit video from v.redd.it CDN.
 
-        Uses v.redd.it CDN directly (no yt-dlp needed).
-        Reddit CDN serves video+audio separately; we download video only
-        since the pipeline adds its own TTS narration.
+        Reddit serves video and audio as separate streams.
+        We download both and merge with ffmpeg.
         """
         if self._dry_run:
             return self._fixture_download(clip, dest)
@@ -105,27 +108,75 @@ class RedditVideoProvider(FootageProvider):
         dest.mkdir(parents=True, exist_ok=True)
         output_path = dest / f"reddit_{clip.external_id}.mp4"
 
-        # Extract v.redd.it video ID from URL (not the post ID)
-        # URL format: https://v.redd.it/{video_id}
+        # Extract v.redd.it video ID from URL
         video_id = clip.url.split("v.redd.it/")[-1].split("/")[0].split("?")[0] if "v.redd.it" in (clip.url or "") else clip.external_id
 
-        log.info("Downloading Reddit clip %s (vreddit=%s) from CDN", clip.external_id, video_id)
+        log.info("Downloading Reddit clip %s (vreddit=%s)", clip.external_id, video_id)
 
-        # Try multiple resolutions
-        for res in ["480", "360", "720"]:
+        # Headers that v.redd.it accepts
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        }
+
+        # Try multiple resolutions for video stream
+        video_path = dest / f"reddit_{clip.external_id}_video.mp4"
+        audio_path = dest / f"reddit_{clip.external_id}_audio.mp4"
+        video_ok = False
+        audio_ok = False
+
+        for res in ["480", "360", "720", "1080"]:
             url = f"https://v.redd.it/{video_id}/DASH_{res}.mp4"
             try:
-                resp = httpx.get(url, timeout=60, follow_redirects=True,
-                                 headers={"User-Agent": "Mozilla/5.0"})
+                resp = httpx.get(url, timeout=60, follow_redirects=True, headers=headers)
                 if resp.status_code == 200 and len(resp.content) > 1000:
-                    output_path.write_bytes(resp.content)
-                    log.info("Downloaded %s (%d bytes, %sp)", video_id, len(resp.content), res)
+                    video_path.write_bytes(resp.content)
+                    video_ok = True
+                    log.info("Video stream %s: %d bytes", res, len(resp.content))
                     break
             except Exception as e:
                 log.debug("Resolution %s failed: %s", res, e)
                 continue
-        else:
+
+        if not video_ok:
             raise RuntimeError(f"All CDN resolutions failed for {video_id} (post={clip.external_id})")
+
+        # Try to download audio stream
+        for audio_url in [
+            f"https://v.redd.it/{video_id}/DASH_AUDIO_128.mp4",
+            f"https://v.redd.it/{video_id}/DASH_audio.mp4",
+        ]:
+            try:
+                resp = httpx.get(audio_url, timeout=30, follow_redirects=True, headers=headers)
+                if resp.status_code == 200 and len(resp.content) > 1000:
+                    audio_path.write_bytes(resp.content)
+                    audio_ok = True
+                    log.info("Audio stream: %d bytes", len(resp.content))
+                    break
+            except Exception:
+                continue
+
+        # Merge video + audio, or just use video
+        import subprocess as _sp
+        if audio_ok:
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", str(video_path),
+                "-i", str(audio_path),
+                "-c:v", "copy", "-c:a", "aac",
+                str(output_path),
+            ]
+            result = _sp.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                log.warning("ffmpeg merge failed, using video only: %s", result.stderr[:200])
+                video_path.rename(output_path)
+            else:
+                video_path.unlink(missing_ok=True)
+                audio_path.unlink(missing_ok=True)
+        else:
+            log.info("No audio stream available, using video only")
+            video_path.rename(output_path)
+
+        log.info("Downloaded %s (%d bytes)", clip.external_id, output_path.stat().st_size)
 
         # Update duration from downloaded file
         try:
