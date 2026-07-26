@@ -67,7 +67,8 @@ class RedditVideoProvider(FootageProvider):
                 resp.raise_for_status()
                 break
             else:
-                raise RuntimeError(f"Pullpush API failed after 3 attempts for r/{subreddit}")
+                log.warning("Pullpush API unavailable, using cached pool")
+                return self._pool_search(subreddit, limit, min_upvotes)
             data = resp.json()
 
         clips = []
@@ -201,6 +202,36 @@ class RedditVideoProvider(FootageProvider):
             pass
 
         return output_path
+
+    def _pool_search(self, subreddit: str, limit: int, min_upvotes: int) -> list[SourcedClip]:
+        """Fallback: search from cached Reddit pool when API is unavailable."""
+        import json as _json
+        pool_path = _PROJECT_ROOT / "config" / "reddit_pool.json"
+        if not pool_path.exists():
+            log.error("No cached Reddit pool found at %s", pool_path)
+            return []
+
+        pool = _json.loads(pool_path.read_text())
+        matches = [p for p in pool if p.get("subreddit", "").lower() == subreddit.lower()]
+        if not matches:
+            # Use any subreddit if exact match not found
+            matches = pool
+
+        clips = []
+        for item in matches[:limit]:
+            clips.append(SourcedClip(
+                provider="reddit-video",
+                external_id=item["external_id"],
+                url=item["url"],
+                local_path=None,
+                duration_s=item.get("duration_s", 10.0),
+                width=item.get("width", 1080),
+                height=item.get("height", 1920),
+                attribution=item.get("attribution", ""),
+            ))
+
+        log.info("Pool fallback: %d clips for r/%s", len(clips), subreddit)
+        return clips
 
     def _fixture_search(self, subreddit: str, limit: int) -> list[SourcedClip]:
         clips = []
