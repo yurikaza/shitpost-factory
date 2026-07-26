@@ -66,6 +66,7 @@ jobs:
           echo "R2_BUCKET=${{ secrets.R2_BUCKET }}" >> .env
           echo "R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}" >> .env
           echo "IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}" >> .env
+          echo "IG_BUSINESS_ACCOUNT_ID=${{ secrets.IG_BUSINESS_ACCOUNT_ID }}" >> .env
           echo "DRY_RUN=false" >> .env
 
       - name: Render video
