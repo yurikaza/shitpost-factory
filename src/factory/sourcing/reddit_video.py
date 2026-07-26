@@ -18,6 +18,7 @@ from factory.types import SourcedClip
 log = logging.getLogger(__name__)
 
 _API_BASE = "https://api.pullpush.io/reddit/search/submission/"
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 class RedditVideoProvider(FootageProvider):
