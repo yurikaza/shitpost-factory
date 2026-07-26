@@ -73,7 +73,8 @@ def _render_text_image(
         font = ImageFont.load_default()
 
     # Word wrap: split text into lines that fit the width
-    max_text_width = width - 60  #30px margin each side
+    margin = max(10, int(30 * width / 1080))
+    max_text_width = width - margin * 2
     words = text.split()
     lines = []
     current_line = ""
@@ -100,7 +101,7 @@ def _render_text_image(
         x = (width - text_w) // 2
 
         # Black outline (draw offset in all directions)
-        outline_width = 6
+        outline_width = max(2, int(6 * width / 1080))
         for ox in range(-outline_width, outline_width + 1):
             for oy in range(-outline_width, outline_width + 1):
                 if ox*ox + oy*oy <= outline_width*outline_width:
@@ -140,13 +141,18 @@ def overlay_text(
     w = info.get("width", 1080)
     h = info.get("height", 1920)
 
+    # Scale font size relative to video width (base: 48pt for 1080px wide)
+    # Use sqrt scaling so small videos don't get tiny text
+    scale = (w / 1080) ** 0.7
+    scaled_font_size = max(18, int(font_size * scale))
+
     # Generate text overlay images
     work_dir = output_path.parent
-    hook_img = _render_text_image(hook, w, h, font_size=font_size, y_position=80)
+    hook_img = _render_text_image(hook, w, h, font_size=scaled_font_size, y_position=int(80 * h / 1920))
     hook_path = work_dir / "text_hook.png"
     hook_img.save(str(hook_path))
 
-    punchline_img = _render_text_image(punchline, w, h, font_size=font_size, y_position=h - 250)
+    punchline_img = _render_text_image(punchline, w, h, font_size=scaled_font_size, y_position=h - int(250 * h / 1920))
     punchline_path = work_dir / "text_punchline.png"
     punchline_img.save(str(punchline_path))
 
