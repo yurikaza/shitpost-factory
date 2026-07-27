@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS posts (
     status      TEXT NOT NULL DEFAULT 'pending'
 );
 
+CREATE TABLE IF NOT EXISTS video_fingerprints (
+    fingerprint TEXT NOT NULL PRIMARY KEY,
+    concept_id  TEXT NOT NULL,
+    script_hash TEXT,
+    video_hash  TEXT,
+    duration_s  REAL,
+    created_at  TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS runs (
     run_id      TEXT PRIMARY KEY,
     concept_id  TEXT NOT NULL,
@@ -144,6 +153,47 @@ class Store:
             (platform, today),
         ).fetchone()
         return row[0] if row else 0
+
+    # -- video fingerprint dedup -------------------------------------------
+
+    def is_fingerprint_used(self, fingerprint: str, within_days: int = 90) -> bool:
+        """Check if a video fingerprint has been posted within the dedup window."""
+        conn = self._get_conn()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=within_days)).isoformat()
+        row = conn.execute(
+            "SELECT 1 FROM video_fingerprints WHERE fingerprint = ? AND created_at > ?",
+            (fingerprint, cutoff),
+        ).fetchone()
+        return row is not None
+
+    def record_fingerprint(
+        self,
+        fingerprint: str,
+        concept_id: str,
+        script_hash: str | None = None,
+        video_hash: str | None = None,
+        duration_s: float = 0.0,
+    ) -> None:
+        """Record a video fingerprint to prevent reposting similar content."""
+        conn = self._get_conn()
+        conn.execute(
+            "INSERT OR IGNORE INTO video_fingerprints"
+            " (fingerprint, concept_id, script_hash, video_hash, duration_s, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (fingerprint, concept_id, script_hash, video_hash, duration_s,
+             datetime.now(timezone.utc).isoformat()),
+        )
+        conn.commit()
+
+    def is_script_hash_used(self, script_hash: str, within_days: int = 90) -> bool:
+        """Check if a script with this hash was already posted recently."""
+        conn = self._get_conn()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=within_days)).isoformat()
+        row = conn.execute(
+            "SELECT 1 FROM video_fingerprints WHERE script_hash = ? AND created_at > ?",
+            (script_hash, cutoff),
+        ).fetchone()
+        return row is not None
 
     # -- runs ---------------------------------------------------------------
 

@@ -26,6 +26,7 @@ from factory.render.compose import compose_video
 from factory.scripting.llm_client import build_client
 from factory.scripting.writer import write_script
 from factory.sourcing.base import FootageProvider
+from factory.sourcing.content_dedup import ContentDedupGuard
 from factory.sourcing.dedupe import DedupeGuard
 from factory.sourcing.archive_org import ArchiveOrgProvider
 from factory.sourcing.pexels import PexelsProvider
@@ -366,6 +367,7 @@ def produce(
 
     store = Store(_PROJECT_ROOT / "state.db")
     dedupe = DedupeGuard(store, window_days=concept.sourcing.dedupe_window_days)
+    content_dedup = ContentDedupGuard(store, window_days=concept.sourcing.dedupe_window_days)
     run_id = store.start_run(concept_id)
 
     try:
@@ -394,12 +396,44 @@ def produce(
 
         store.finish_run(run_id, "rendered")
 
-        # Stage 5: Publish
+        # Stage 5: Publish (with content dedup check)
         publish_results = []
         if publish:
+            # Content-level dedup: check before publishing
+            is_new, dup_reason = content_dedup.check_and_record(
+                video, script, concept_id
+            )
+            if not is_new:
+                log.warning(
+                    "Content dedup BLOCKED: concept=%s reason=%s",
+                    concept_id, dup_reason,
+                )
+                store.finish_run(run_id, "deduped", error=dup_reason)
+                return {
+                    "concept": concept_id,
+                    "video": video,
+                    "publish_results": [],
+                    "error": dup_reason,
+                }
+
             publish_results = _stage_publish(concept, video, script, dry_run=dry_run)
+
+            # Record successful posts to the ledger
+            for pr in publish_results:
+                if pr.ok:
+                    store.record_post(
+                        concept_id=concept_id,
+                        platform=pr.platform,
+                        platform_post_id=pr.post_id,
+                        url=pr.url,
+                        status="posted",
+                    )
+
             store.finish_run(run_id, "published")
         else:
+            # Even for non-publish runs, record the fingerprint
+            # so re-renders don't accidentally get posted later
+            content_dedup.check_and_record(video, script, concept_id)
             store.finish_run(run_id, "rendered")
 
         log.info(
