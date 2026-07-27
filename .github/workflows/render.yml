@@ -54,6 +54,15 @@ jobs:
           sudo apt-get install -y ffmpeg fonts-dejavu-extra
           pip install yt-dlp
 
+      - name: Restore dedup state
+        uses: actions/cache@v4
+        with:
+          path: state.db
+          key: dedup-state-${{ inputs.concept }}
+          restore-keys: |
+            dedup-state-${{ inputs.concept }}
+            dedup-state-
+
       - name: Create .env
         run: |
           echo "MIMO_API_KEY=${{ secrets.MIMO_API_KEY }}" > .env
@@ -231,7 +240,14 @@ jobs:
               sys.exit(1)
           "
 
+      - name: Save dedup state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state.db
+          key: dedup-state-${{ inputs.concept }}-${{ github.run_id }}
+
       - name: Cleanup work directory
         if: always()
         run: |
-          rm -rf work/ state.db
+          rm -rf work/

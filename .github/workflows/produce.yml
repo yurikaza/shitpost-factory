@@ -44,8 +44,14 @@ jobs:
           path: ~/.cache/huggingface
           key: whisper-base-v1
 
-      # TODO: restore state.db from an artifact or external store,
-      # otherwise dedupe resets every run
+      - name: Restore dedup state
+        uses: actions/cache@v4
+        with:
+          path: state.db
+          key: dedup-state-produce
+          restore-keys: |
+            dedup-state-produce
+
       - name: run
         env:
           DRY_RUN: ${{ inputs.publish && 'false' || 'true' }}
@@ -60,6 +66,13 @@ jobs:
           else
             python -m factory.cli run-all
           fi
+
+      - name: Save dedup state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state.db
+          key: dedup-state-produce-${{ github.run_id }}
 
       - uses: actions/upload-artifact@v4
         if: always()

@@ -195,6 +195,16 @@ class Store:
         ).fetchone()
         return row is not None
 
+    def is_video_hash_used(self, video_hash: str, within_days: int = 90) -> bool:
+        """Check if a video with this hash was already posted recently."""
+        conn = self._get_conn()
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=within_days)).isoformat()
+        row = conn.execute(
+            "SELECT 1 FROM video_fingerprints WHERE video_hash = ? AND created_at > ?",
+            (video_hash, cutoff),
+        ).fetchone()
+        return row is not None
+
     # -- runs ---------------------------------------------------------------
 
     def start_run(self, concept_id: str) -> str:

@@ -89,12 +89,10 @@ def test_duplicate_video_blocked(tmp_path):
     assert is_ok is True
 
     script2 = _make_script(hook="Hook B", body="Body B")
-    # Same video hash + different script = different fingerprint
-    # but video hash alone isn't blocked, only script hash or full fingerprint
-    # The fingerprint is script_hash:video_hash, so different script = different fp
-    is_ok, _ = guard.check_and_record(video, script2, "concept-b")
-    # This should pass because the composite fingerprint differs
-    assert is_ok is True
+    # Same video hash + different script → blocked by video-hash-only check
+    is_ok, reason = guard.check_and_record(video, script2, "concept-b")
+    assert is_ok is False
+    assert "Duplicate video" in reason
     store.close()
 
 
@@ -114,4 +112,22 @@ def test_exact_duplicate_blocked(tmp_path):
     is_ok, reason = guard.check_and_record(video, script, "concept-a")
     assert is_ok is False
     assert "Duplicate content" in reason
+    store.close()
+
+
+def test_different_video_and_script_allowed(tmp_path):
+    """Two genuinely different videos with different scripts should both pass."""
+    db = tmp_path / "test.db"
+    store = Store(db)
+    guard = ContentDedupGuard(store)
+
+    video1 = _make_video(tmp_path / "video1.mp4", size=1024)
+    script1 = _make_script(hook="Hook A", body="Body A")
+    is_ok, _ = guard.check_and_record(video1, script1, "concept-a")
+    assert is_ok is True
+
+    video2 = _make_video(tmp_path / "video2.mp4", size=9999)
+    script2 = _make_script(hook="Hook B", body="Body B")
+    is_ok, _ = guard.check_and_record(video2, script2, "concept-b")
+    assert is_ok is True
     store.close()

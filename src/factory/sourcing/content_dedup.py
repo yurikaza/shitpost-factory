@@ -68,6 +68,12 @@ class ContentDedupGuard:
 
         If is_ok=True, the fingerprint is recorded (caller should proceed).
         If is_ok=False, reason explains why it was blocked.
+
+        Checks (in order):
+        1. Exact same video+script combo (composite fingerprint)
+        2. Same script text (even if video differs slightly)
+        3. Same video file (even if script differs — prevents reposting
+           the same Reddit clip with a re-generated script)
         """
         fp = compute_fingerprint(video, script)
 
@@ -83,6 +89,15 @@ class ContentDedupGuard:
             return False, (
                 f"Duplicate script: same narration text was already posted "
                 f"(script_hash={fp['script_hash']})"
+            )
+
+        # Check 3: Same video file (even if script differs)
+        # This catches the case where a Reddit clip gets re-sourced
+        # and the LLM generates a slightly different script.
+        if self._store.is_video_hash_used(fp["video_hash"], self._window_days):
+            return False, (
+                f"Duplicate video: same video file was already posted "
+                f"(video_hash={fp['video_hash']})"
             )
 
         # All clear — record the fingerprint
